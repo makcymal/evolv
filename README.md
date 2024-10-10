@@ -1,12 +1,12 @@
 # `evolv` – Markov chain implementation
 
-<figure>
-  <center>
+<p align="center">
+  <figure>
     <img src="i-forgor-i-rember.png"
          alt="i forgor i rember meme" width="300" height="200">
     <figcaption><b><code>evolv</code></b> also has two sides</figcaption>
-  </center>
-</figure>
+  </figure>
+</p>
 
 ### `ForgorChain`
 
