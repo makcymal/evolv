@@ -1,9 +1,9 @@
 # `evolv` – Markov chain implementation
 
-<p align="center">
+<p align="center" width="100%">
   <figure>
     <img src="i-forgor-i-rember.png"
-         alt="i forgor i rember meme" width="300" height="200">
+         alt="i forgor i rember meme" width="40%">
     <figcaption><b><code>evolv</code></b> also has two sides</figcaption>
   </figure>
 </p>
