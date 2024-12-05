@@ -10,71 +10,71 @@
 
 namespace evolv {
 
-template <class State, class Code>
-  requires std::copy_constructible<State> && std::integral<Code>
-class MarkovChain<State, Code>::Impl {
+template <class StateT, class CodeT>
+  requires std::copy_constructible<StateT> && std::integral<CodeT>
+class MarkovChain<StateT, CodeT>::Impl {
  public:
   Impl(int memory) {
     assert(memory >= 0 && "Constructing MarkovChain with memory < 0");
     if (memory == 0) {
-      chain_ = internal::ForgorChain<Code>();
+      chain_ = internal::ForgorChain<CodeT>();
     } else {
-      chain_ = internal::RemberChain<Code>(memory);
+      chain_ = internal::RemberChain<CodeT>(memory);
     }
   }
 
-  template <class Iter>
-    requires internal::is_iterator<State, Iter>
-  void FeedSequence(Iter begin, Iter end) {
+  template <class IterT>
+    requires internal::is_iterator<StateT, IterT>
+  void FeedSequence(IterT begin, IterT end) {
     chain_.FeedSequence(EncodeIterator(begin, EncodeState),
                         EncodeIterator(end, EncodeState));
   }
 
-  State PredictState(bool move_to_predicted) {
+  StateT PredictState(bool move_to_predicted) {
     return DecodeState(chain_.PredictState(move_to_predicted));
   }
 
 
  private:
-  internal::BaseChain<Code> chain_;
-  std::unordered_map<State, Code> state_encoder_;
-  std::vector<State> state_decoder_;
+  internal::BaseChain<CodeT> chain_;
+  std::unordered_map<StateT, CodeT> state_encoder_;
+  std::vector<StateT> state_decoder_;
 
 
-  Code EncodeState(const State &state) {
+  CodeT EncodeState(const StateT &state) {
     if (state_encoder_.count(state) == 0) {
-      state_encoder_[state] = static_cast<Code>(state_decoder_.size());
+      state_encoder_[state] = static_cast<CodeT>(state_decoder_.size());
       state_decoder_.push_back(state);
     }
     return state_encoder_[state];
   }
 
-  State DecodeState(Code code) {
+  StateT DecodeState(CodeT code) {
     return state_decoder_[code];
   }
 
 
-  template <class Iter>
-    requires internal::is_iterator<State, Iter>
+  template <class IterT>
+    requires internal::is_iterator<StateT, IterT>
   class EncodeIterator {
    public:
     // postfix increment
-    void operator++(Iter) {
+    void operator++(IterT) {
       iter_++;
     }
 
-    Code operator*() const {
+    CodeT operator*() const {
       return encoder_func_(*iter_);
     }
 
    private:
-    using encoder_func_t = std::function<Code(const State &state)>;
+    using encoder_func_t = std::function<CodeT(const StateT &state)>;
 
-    EncodeIterator(Iter iter, encoder_func_t encoder_func)
+    EncodeIterator(IterT iter, encoder_func_t encoder_func)
     : iter_(iter), encoder_func_(encoder_func) {
     }
 
-    Iter iter_;
+    IterT iter_;
     encoder_func_t encoder_func_;
   };
 };

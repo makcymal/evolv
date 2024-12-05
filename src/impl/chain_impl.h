@@ -3,45 +3,46 @@
 #include <deque>
 
 #include "../markov_chain.h"
+#include "fenwick_tree.h"
 
 
 namespace evolv::internal {
-  
-template <class T, class Iter>
+
+template <class DataT, class IterT>
 concept is_iterator =
-  std::is_same_v<typename std::iterator_traits<Iter>::value_type, T>;
+  std::is_same_v<typename std::iterator_traits<IterT>::value_type, DataT>;
 
 
-template <class T>
-  requires std::integral<T>
+template <class StateT>
+  requires std::integral<StateT>
 class BaseChain {
  public:
-  template <class Iter>
-    requires is_iterator<T, Iter>
-  void FeedSequence(Iter begin, Iter end);
+  template <class IterT>
+    requires is_iterator<StateT, IterT>
+  void FeedSequence(IterT begin, IterT end);
 
   int PredictState(bool move_to_predicted = false);
 };
 
 
-template <class T>
-class ForgorChain : public BaseChain<T> {
+template <class StateT>
+class ForgorChain : public BaseChain<StateT> {
  public:
   ForgorChain();
 
  private:
-  T last_state_;
+  StateT last_state_;
 };
 
 
-template <class T>
-class RemberChain : public BaseChain<T> {
+template <class StateT>
+class RemberChain : public BaseChain<StateT> {
  public:
   RemberChain(int memory = 1);
 
  private:
   int memory_;
-  std::deque<T> last_states_;
+  std::deque<StateT> last_states_;
 };
 
 }  // namespace evolv::internal
