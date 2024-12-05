@@ -2,19 +2,26 @@
 
 #include <vector>
 
+//! Fenwick tree implementation
 template <typename T>
 class Fenwick {
  public:
+  //! Constructs empty Fenwick tree
   Fenwick() = default;
 
+  //! Constructs Fenwick tree of given size
   Fenwick(std::size_t n);
 
-  Fenwick(const std::vector<T> &arr);
+  //! Constructs Fenwick tree with given data
+  Fenwick(const std::vector<T> &data);
   
+  //! Destroys Fenwick tree
   ~Fenwick();
 
+  //! Returns numbers of elements in Fenwick tree
   std::size_t size() const;
 
+  //! Resizes 
   void resize(std::size_t n);
 
   void reset();
@@ -33,7 +40,7 @@ class Fenwick {
 
   void append(T x);
 
-  int upper_bound(int x) const;
+  int upper_bound(T x) const;
   
  private:
   struct Impl;

@@ -59,8 +59,7 @@ template <typename T>
 T Fenwick<T>::sum(int rb) const {
   rb++;
   int res = 0;
-  for (; rb > 0; rb -= (rb & -rb))
-    res += impl->tree[rb];
+  for (; rb > 0; rb -= (rb & -rb)) res += impl->tree[rb];
   return res;
 }
 
@@ -80,8 +79,7 @@ T Fenwick<T>::get(int idx) const {
 template <typename T>
 void Fenwick<T>::add(int idx, T x) {
   idx++;
-  for (; idx < impl->tree.size(); idx += (idx & -idx))
-    impl->tree[idx] += x;
+  for (; idx < impl->tree.size(); idx += (idx & -idx)) impl->tree[idx] += x;
 }
 
 template <typename T>
