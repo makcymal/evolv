@@ -8,20 +8,13 @@
 
 namespace evolv::internal {
 
-template <class DataT, class IterT>
-concept is_iterator =
-  std::is_same_v<typename std::iterator_traits<IterT>::value_type, DataT>;
-
-
 template <class StateT>
   requires std::integral<StateT>
 class BaseChain {
  public:
-  template <class IterT>
-    requires is_iterator<StateT, IterT>
-  void FeedSequence(IterT begin, IterT end);
+  virtual void FeedSequence(const std::vector<StateT> &seq);
 
-  int PredictState(bool move_to_predicted = false);
+  virtual StateT PredictState(bool move_to_predicted = false);
 };
 
 
@@ -29,6 +22,10 @@ template <class StateT>
 class ForgorChain : public BaseChain<StateT> {
  public:
   ForgorChain();
+  
+  void FeedSequence(const std::vector<StateT> &seq);
+  
+  StateT PredictState(bool move_to_predicted = false);
 
  private:
   StateT last_state_;
@@ -39,6 +36,10 @@ template <class StateT>
 class RemberChain : public BaseChain<StateT> {
  public:
   RemberChain(int memory = 1);
+  
+  void FeedSequence(const std::vector<StateT> &seq);
+
+  StateT PredictState(bool move_to_predicted = false);
 
  private:
   int memory_;

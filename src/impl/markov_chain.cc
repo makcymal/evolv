@@ -1,7 +1,6 @@
 #include "../markov_chain.h"
 
 #include <cassert>
-#include <functional>
 #include <unordered_map>
 #include <vector>
 
@@ -24,16 +23,18 @@ class MarkovChain<StateT, CodeT>::Impl {
   }
 
   template <class IterT>
-    requires internal::is_iterator<StateT, IterT>
+    requires internal::is_iterator<IterT, StateT>
   void FeedSequence(IterT begin, IterT end) {
-    chain_.FeedSequence(EncodeIterator(begin, EncodeState),
-                        EncodeIterator(end, EncodeState));
+    std::vector<CodeT> enc_seq;
+    for (IterT it = begin; it != end; ++it) {
+      enc_seq.push_back(EncodeState(*it));
+    }
+    chain_.FeedSequence(enc_seq);
   }
 
   StateT PredictState(bool move_to_predicted) {
     return DecodeState(chain_.PredictState(move_to_predicted));
   }
-
 
  private:
   internal::BaseChain<CodeT> chain_;
@@ -52,31 +53,6 @@ class MarkovChain<StateT, CodeT>::Impl {
   StateT DecodeState(CodeT code) {
     return state_decoder_[code];
   }
-
-
-  template <class IterT>
-    requires internal::is_iterator<StateT, IterT>
-  class EncodeIterator {
-   public:
-    // postfix increment
-    void operator++(IterT) {
-      iter_++;
-    }
-
-    CodeT operator*() const {
-      return encoder_func_(*iter_);
-    }
-
-   private:
-    using encoder_func_t = std::function<CodeT(const StateT &state)>;
-
-    EncodeIterator(IterT iter, encoder_func_t encoder_func)
-    : iter_(iter), encoder_func_(encoder_func) {
-    }
-
-    IterT iter_;
-    encoder_func_t encoder_func_;
-  };
 };
 
 }  // namespace evolv

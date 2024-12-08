@@ -5,6 +5,13 @@
 #include <memory>
 
 
+namespace evolv::internal {
+template <class IterT, class DataT>
+concept is_iterator =
+  std::is_same_v<typename std::iterator_traits<IterT>::value_type, DataT>;
+}
+
+
 namespace evolv {
 
 template <class StateT, class CodeT = int>
@@ -15,8 +22,7 @@ class MarkovChain {
   }
 
   template <class IterT>
-    requires std::is_same_v<typename std::iterator_traits<IterT>::value_type,
-                            StateT>
+    requires internal::is_iterator<IterT, StateT>
   void FeedSequence(IterT begin, IterT end) {
     impl->FeedSequence(begin, end);
   }
