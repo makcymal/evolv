@@ -6,30 +6,34 @@
 #include <type_traits>
 #include <vector>
 
+namespace evolv::internal {
+  
 //! Fenwick tree implementation
 template <class DataT, class SizeT = int64_t>
   requires std::integral<DataT> && std::signed_integral<SizeT>
 class FenwickTree {
  public:
   //! Constructs empty Fenwick tree
-  FenwickTree(SizeT size = 0);
+  FenwickTree() = default;
+
+  FenwickTree(SizeT size);
 
   //! Returns number of elements in Fenwick tree
-  SizeT size() const;
+  SizeT Size() const;
 
   //! Resizes
-  void resize(SizeT n);
+  void Resize(SizeT n);
 
-  DataT sum(SizeT lb, SizeT rb) const;
+  DataT Sum(SizeT rb) const;
 
-  void add(SizeT idx, DataT x);
+  DataT Sum(SizeT lb, SizeT rb) const;
 
-  void append(DataT x);
+  void Add(SizeT idx, DataT x);
 
-  SizeT upper_bound(DataT x) const;
+  SizeT UpperBound(DataT x) const;
 
  private:
   std::vector<DataT> tree_;
-
-  DataT sum(SizeT rb) const;
 };
+
+}  // namespace evolv::internal

@@ -1,5 +1,6 @@
 #include "fenwick_tree.h"
 
+namespace evolv::internal {
 
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
@@ -9,19 +10,19 @@ FenwickTree<DataT, SizeT>::FenwickTree(SizeT size)
 
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
-SizeT FenwickTree<DataT, SizeT>::size() const {
+SizeT FenwickTree<DataT, SizeT>::Size() const {
   return static_cast<SizeT>(tree_.size()) - 1;
 }
 
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
-void FenwickTree<DataT, SizeT>::resize(SizeT new_size) {
+void FenwickTree<DataT, SizeT>::Resize(SizeT new_size) {
   tree_.resize(static_cast<std::size_t>(new_size) + 1, 0);
 }
 
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
-DataT FenwickTree<DataT, SizeT>::sum(SizeT rb) const {
+DataT FenwickTree<DataT, SizeT>::Sum(SizeT rb) const {
   rb++;
   DataT res = 0;
   for (; rb > 0; rb -= (rb & -rb)) {
@@ -32,7 +33,7 @@ DataT FenwickTree<DataT, SizeT>::sum(SizeT rb) const {
 
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
-DataT FenwickTree<DataT, SizeT>::sum(SizeT lb, SizeT rb) const {
+DataT FenwickTree<DataT, SizeT>::Sum(SizeT lb, SizeT rb) const {
   rb++;
   lb++;
   return sum(rb) - sum(lb - 1);
@@ -40,7 +41,10 @@ DataT FenwickTree<DataT, SizeT>::sum(SizeT lb, SizeT rb) const {
 
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
-void FenwickTree<DataT, SizeT>::add(SizeT idx, DataT x) {
+void FenwickTree<DataT, SizeT>::Add(SizeT idx, DataT x) {
+  if (idx >= Size()) {
+    Resize(idx + 1);
+  }
   idx++;
   for (; idx < tree_.size(); idx += (idx & -idx)) {
     tree_[idx] += x;
@@ -49,19 +53,7 @@ void FenwickTree<DataT, SizeT>::add(SizeT idx, DataT x) {
 
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
-void FenwickTree<DataT, SizeT>::append(DataT x) {
-  tree_.push_back(x);
-
-  SizeT rb = tree_.size() - 1;
-  SizeT lb = rb - (rb & -rb) + 1;
-  if (1 <= lb and lb <= rb - 1) {
-    tree_.back() += sum(lb, rb - 1);
-  }
-}
-
-template <class DataT, class SizeT>
-  requires std::integral<DataT> && std::signed_integral<SizeT>
-SizeT FenwickTree<DataT, SizeT>::upper_bound(DataT x) const {
+SizeT FenwickTree<DataT, SizeT>::UpperBound(DataT x) const {
   SizeT idx = 0;
   for (SizeT lmb = __bit_floor(tree_.size()); lmb >= 1; lmb >>= 1) {
     if (idx + lmb < tree_.size() and tree_[idx + lmb] <= x) {
@@ -71,3 +63,5 @@ SizeT FenwickTree<DataT, SizeT>::upper_bound(DataT x) const {
   }
   return idx;
 }
+
+}  // namespace evolv::internal
