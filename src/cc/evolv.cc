@@ -2,8 +2,8 @@
 
 #include <cassert>
 
-#include "../h/forgor_chain.h"
-#include "../h/rember_chain.h"
+#include "src/h/forgor_chain.h"
+#include "src/h/rember_chain.h"
 
 
 namespace evolv {

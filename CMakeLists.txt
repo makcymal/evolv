@@ -48,3 +48,5 @@ add_library(evolv
   "src/evolv.h"
   ${evolv_SRC}
 )
+
+target_include_directories(evolv PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
