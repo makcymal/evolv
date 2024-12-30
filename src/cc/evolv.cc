@@ -1,10 +1,9 @@
-#include "../markov_chain.h"
+#include "../evolv.h"
 
 #include <cassert>
-#include <unordered_map>
-#include <vector>
 
-#include "chain_impl.h"
+#include "../h/forgor_chain.h"
+#include "../h/rember_chain.h"
 
 
 namespace evolv {
@@ -23,7 +22,7 @@ class MarkovChain<StateT, CodeT>::Impl {
   }
 
   template <class IterT>
-    requires internal::is_iterator<IterT, StateT>
+    requires is_iterator<IterT, StateT>
   void FeedSequence(IterT begin, IterT end) {
     std::vector<CodeT> enc_seq;
     for (IterT it = begin; it != end; ++it) {
@@ -50,9 +49,7 @@ class MarkovChain<StateT, CodeT>::Impl {
     return state_encoder_[state];
   }
 
-  StateT DecodeState(CodeT code) {
-    return state_decoder_[code];
-  }
+  StateT DecodeState(CodeT code) { return state_decoder_[code]; }
 };
 
 }  // namespace evolv

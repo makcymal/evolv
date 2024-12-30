@@ -51,6 +51,10 @@
 ###########
 
 bin/
-build/
+.build/
 .ignore/
-*test*
+test.*
+
+*[Cc][Mm]ake*
+!CMakeLists.txt
+
