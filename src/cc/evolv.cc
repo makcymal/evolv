@@ -3,7 +3,6 @@
 #include <cassert>
 #include <memory>
 
-#include "src/h/encoding_iter.h"
 #include "src/h/forgor_chain.h"
 #include "src/h/rember_chain.h"
 #include "src/h/state_coder.h"
@@ -28,6 +27,8 @@ class MarkovChain<StateT, CodeT>::Impl {
     }
     state_coder_ = std::make_shared<StateCoder<StateT, CodeT>>();
   }
+  
+  virtual ~Impl() = default;
 
   //! Learn from the sequence given as std::vector,
   //! move to last state in sequence if needed
@@ -73,5 +74,9 @@ template <class StateT, class CodeT>
 MarkovChain<StateT, CodeT>::MarkovChain(int memory)
     : impl(std::make_unique<Impl>(memory)) {
 }
+
+template <class StateT, class CodeT>
+  requires std::copy_constructible<StateT> && std::integral<CodeT>
+MarkovChain<StateT, CodeT>::~MarkovChain() = default;
 
 }  // namespace evolv

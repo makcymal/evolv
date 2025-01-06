@@ -39,6 +39,8 @@ class MarkovChain {
  public:
   //! Instantiate chain tracking the given number of previous states
   explicit MarkovChain(int memory = 0);
+  
+  ~MarkovChain();
 
   //! Learn from sequence given as std::vector,
   //! move to last state in sequence if needed
