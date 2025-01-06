@@ -1,29 +1,20 @@
 #pragma once
 
+#include <cassert>
 #include <concepts>
-#include <iterator>
 #include <memory>
 #include <vector>
+
+#include "impl/base_chain.h"
+#include "impl/forgor_chain.h"
+#include "impl/rember_chain.h"
+#include "impl/state_coder.h"
+#include "impl/utils.h"
 
 
 //! Entry-point namespace for the library
 namespace evolv {
-
-//! Namespace for utilities that cannot be placed in evolv::internal
-namespace utils {
-
-//! Concept for checking if IterT is iterator on elements
-//! of type DataT, DataT & or const DataT &
-template <class IterT, class DataT>
-concept is_iterator =
-    std::is_same_v<typename std::iterator_traits<IterT>::value_type, DataT> ||
-    std::is_same_v<typename std::iterator_traits<IterT>::value_type, DataT &> ||
-    std::is_same_v<typename std::iterator_traits<IterT>::value_type,
-                   const DataT &>;
-
-}  // namespace utils
-
-
+  
 /*!
   \brief Class representing the Markov chain
 
@@ -38,14 +29,22 @@ template <class StateT, class CodeT = int>
 class MarkovChain {
  public:
   //! Instantiate chain tracking the given number of previous states
-  explicit MarkovChain(int memory = 0);
-  
-  ~MarkovChain();
+  explicit MarkovChain(int memory = 0) {
+    assert(memory >= 0 && "Constructing MarkovChain with memory < 0");
+    if (memory == 0) {
+      chain_ = std::make_unique<internal::ForgorChain<CodeT>>();
+    } else {
+      chain_ = std::make_unique<internal::RemberChain<CodeT>>(memory);
+    }
+    state_coder_ = std::make_shared<StateCoder<StateT, CodeT>>();
+  }
+
+  ~MarkovChain() = default;
 
   //! Learn from sequence given as std::vector,
   //! move to last state in sequence if needed
   void FeedSequence(const std::vector<StateT> &seq, bool move_to_last = false) {
-    impl->FeedSequence(seq, move_to_last);
+    FeedSequence(seq.begin(), seq.end(), move_to_last);
   }
 
   //! Learn from sequence given as pair of iterators,
@@ -53,31 +52,31 @@ class MarkovChain {
   template <class IterT>
     requires utils::is_iterator<IterT, StateT>
   void FeedSequence(IterT begin, IterT end, bool move_to_last = false) {
-    impl->FeedSequence(begin, end, move_to_last);
+    chain_->FeedSequence(EncodingIter(begin, state_coder_),
+                        EncodingIter(end, state_coder_), move_to_last);
   }
 
   //! Predict the subsequent state from the current state,
   //! move to predicted state if needed
   StateT PredictState(bool move_to_predicted = false) {
-    return impl->PredictState(move_to_predicted);
+    return state_coder_.Decode[chain_->PredictState(move_to_predicted)];
   }
 
   //! Set new current state, forget the actual one
   void SetCurrentState(StateT state) {
-    impl->SetCurrentState(state);
+    chain_->SetCurrentState(state);
   }
 
   //! Set new current state, forget the actual one
   void SetCurrentState(std::vector<StateT> state) {
-    impl->SetCurrentState(state);
+    chain_->SetCurrentState(state);
   }
 
  private:
-  //! Private implementation class
-  class Impl;
-
-  //! Private implementation object
-  std::unique_ptr<Impl> impl;
+  //! Chain implementation, either ForgorChain or RemberChain
+  std::unique_ptr<internal::BaseChain<CodeT>> chain_;
+  //! State encoder and decoder (into and from CodeT)
+  std::shared_ptr<StateCoder<StateT, CodeT>> state_coder_;
 };
 
 }  // namespace evolv

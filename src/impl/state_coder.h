@@ -6,7 +6,7 @@
 
 /*!
   \brief State encoder and decoder (into and from CodeT)
-  
+
   This is used with BaseChain that can operate only on integral
   types. This ensures biection between arbitrary states and integral codes.
   The StateT must be hashable.
@@ -18,10 +18,18 @@ class StateCoder {
   StateCoder() = default;
 
   //! Map state to code
-  CodeT Encode(const StateT &state);
-  
+  CodeT Encode(const StateT &state) {
+    if (!encoder_.contains(state)) {
+      encoder_[state] = decoder_.size();
+      decoder_.push_back(state);
+    }
+    return encoder_[state];
+  }
+
   //! Map code to state
-  StateT Decode(CodeT code);
+  StateT Decode(CodeT code) {
+    return decoder_[code];
+  }
 
  private:
   //! Stores mapping from state to code

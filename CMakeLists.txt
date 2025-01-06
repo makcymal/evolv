@@ -34,30 +34,18 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-# libevolv.so library target
+# test executable target
 
 file(GLOB
-  evolv_SRC
+  evolv_IMPL
   CONFIGURE_DEPENDS
-  "src/h/*.h"
-  "src/cc/*.cc"
+  "src/impl/*.h"
 )
-
-add_library(evolv
-  SHARED
-  "src/evolv.h"
-  ${evolv_SRC}
-)
-
-target_include_directories(evolv PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-
-# test executable target
 
 add_executable(test
   "test/main.cc"
   "src/evolv.h"
-  ${evolv_SRC}
+  ${evolv_IMPL}
 )
 
 target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
