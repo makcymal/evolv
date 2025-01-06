@@ -15,7 +15,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../.build)
 
 project(evolv
   VERSION 0.1.0
-  DESCRIPTION "Markov chain implementation"
+  DESCRIPTION "Markov chains in C++ and Python"
   LANGUAGES CXX)
 
 if(NOT CMAKE_BUILD_TYPE)

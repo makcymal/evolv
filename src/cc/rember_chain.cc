@@ -2,69 +2,109 @@
 
 #include <cassert>
 #include <chrono>
+#include <deque>
 
 
 namespace evolv::internal {
 
-template <class StateT>
-RemberChain<StateT>::RemberChain(int memory) {
+//! Set curr_state_ and max_state_ to undefined, initialize memory_ and rng_
+template <class CodeT>
+  requires std::integral<CodeT>
+RemberChain<CodeT>::RemberChain(int memory) {
   assert(memory >= 1 && "Constructing RemberChain with memory < 1");
   memory_ = memory;
   total_transitions_ = 0;
-  max_state = -1;
-  rng = std::mt19937_64(
+  max_state_ = -1;
+  rng_ = std::mt19937_64(
       std::chrono::steady_clock::now().time_since_epoch().count());
 }
 
-template <class StateT>
-void RemberChain<StateT>::FeedSequence(const std::vector<StateT> &seq) {
-  if (seq.empty()) {
+//! Learn from the sequence given as pair of iterators,
+//! move to last state in sequence if needed
+template <class CodeT>
+  requires std::integral<CodeT>
+void RemberChain<CodeT>::FeedSequence(EncodingIter<CodeT> begin,
+                                      EncodingIter<CodeT> end,
+                                      bool move_to_last) {
+  if (begin == end) {
     return;
   }
 
-  max_state = std::max(max_state, seq[0]);
-
-  for (int idx = 1; idx < seq.size(); ++idx) {
-    max_state = std::max(max_state, seq[idx]);
-
-    for (int dep = 0; dep <= memory_ && idx - 1 - dep >= 0; ++dep) {
-      transit_counters_[seq[idx - 1 - dep]][dep].Add(seq[idx], 1);
+  auto it = begin;
+  std::deque<CodeT> state{*it};
+  max_state_ = std::max(max_state_, *it);
+  ++it;
+  
+  // iterate over sequence and add new transitions
+  // given the sequence s[0]..s[i]s[i+1]..s[i+N]..
+  // for each d (depth) = 0..N add new transition from s[i] to s[i+d+1]
+  for (; it != end; ++it) {
+    for (int dep = 0; dep <= memory_ && dep < state.size(); ++dep) {
+      transit_counters_[state[dep]][dep].Add(*it, 1);
       total_transitions_ += 1;
     }
+    if (state.size() > memory_ + 1) {
+      state.pop_back();
+    }
+    state.push_front(*it);
+    max_state_ = std::max(max_state_, *it);
   }
 
-  if (seq.size() >= memory_ + 1) {
-    for (int dep = 0, idx = seq.size() - 1; dep <= memory_; ++dep, --idx) {
-      last_states_.push_back(seq[idx]);
-    }
+  if (move_to_last) {
+    curr_state_ = state;
   }
 }
 
-template <class StateT>
-StateT RemberChain<StateT>::PredictState(bool move_to_predicted) {
-  assert(last_states_[0] != -1 &&
+//! Predict the subsequent state from the current state,
+//! move to predicted state if needed
+template <class CodeT>
+  requires std::integral<CodeT>
+CodeT RemberChain<CodeT>::PredictState(bool move_to_predicted) {
+  assert(curr_state_[0] != -1 &&
          "No FeedSequence called with sequence of length greater than memory");
 
-  int64_t x = rng() % total_transitions_;
-  StateT next_state = UpperBound(x);
+  int64_t x = rng_() % total_transitions_;
+  CodeT next_state = UpperBound(x);
 
   if (move_to_predicted) {
-    last_states_.pop_back();
-    last_states_.push_front(next_state);
+    curr_state_.pop_back();
+    curr_state_.push_front(next_state);
   }
 
   return next_state;
 }
 
-template <class StateT>
-StateT RemberChain<StateT>::UpperBound(int64_t x) {
-  int lb = 0, rb = max_state;
+//! Set new current state, forget the actual one
+template <class CodeT>
+  requires std::integral<CodeT>
+void RemberChain<CodeT>::SetCurrentState(CodeT state) {
+  assert(!"Unable to set a new state: incorrect size");
+}
+
+//! Set new current state, forget the actual one
+template <class CodeT>
+  requires std::integral<CodeT>
+void RemberChain<CodeT>::SetCurrentState(std::vector<CodeT> state) {
+  assert(state.size() < memory_ + 1 &&
+         "Unable to set a new state: incorrect size");
+
+  curr_state_ = std::deque<CodeT>(state.begin(), state.begin() + memory_ + 1);
+}
+
+//! Upper bound for the next state from the current one
+template <class CodeT>
+  requires std::integral<CodeT>
+CodeT RemberChain<CodeT>::UpperBound(int64_t x) {
+  // perform binary seach on answer space
+  // from lowest to highest states the sum of transitions over depth
+  int lb = 0, rb = max_state_;
   while (lb < rb) {
     int md = lb + (rb - lb) / 2;
 
+    // count the sum of transitions over depth
     int sum = 0;
     for (int dep = 0; dep <= memory_; ++dep) {
-      sum += transit_counters_[last_states_[dep]][dep].Sum(md);
+      sum += transit_counters_[curr_state_[dep]][dep].Sum(md);
     }
 
     if (sum <= x) {

@@ -1,0 +1,17 @@
+PROJECT_NAME           = evolv
+
+PROJECT_BRIEF          = "Markov chains in C++ and Python"
+
+PROJECT_NUMBER         = 0.1.0
+
+PROJECT_ICON           = fig/logo.png
+
+INPUT                  = src pymodule
+
+RECURSIVE              = YES
+
+OUTPUT_DIRECTORY       = docs
+
+TAB_SIZE               = 2
+
+GENERATE_LATEX         = NO

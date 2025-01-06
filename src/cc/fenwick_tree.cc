@@ -1,25 +1,30 @@
 #include "src/h/fenwick_tree.h"
 
+
 namespace evolv::internal {
 
+//! Costruct Fenwick tree of given size filled with zeros
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
 FenwickTree<DataT, SizeT>::FenwickTree(SizeT size)
-: tree_(static_cast<std::size_t>(size) + 1, 0) {
+    : tree_(static_cast<std::size_t>(size) + 1, 0) {
 }
 
+//! Return number of elements in Fenwick tree
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
 SizeT FenwickTree<DataT, SizeT>::Size() const {
   return static_cast<SizeT>(tree_.size()) - 1;
 }
 
+//! Resize tree: shrink or expand
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
 void FenwickTree<DataT, SizeT>::Resize(SizeT new_size) {
   tree_.resize(static_cast<std::size_t>(new_size) + 1, 0);
 }
 
+//! Count the sum over prefix [0, rb]
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
 DataT FenwickTree<DataT, SizeT>::Sum(SizeT rb) const {
@@ -31,6 +36,7 @@ DataT FenwickTree<DataT, SizeT>::Sum(SizeT rb) const {
   return res;
 }
 
+//! Count the sum over segment [lb, rb]
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
 DataT FenwickTree<DataT, SizeT>::Sum(SizeT lb, SizeT rb) const {
@@ -39,6 +45,7 @@ DataT FenwickTree<DataT, SizeT>::Sum(SizeT lb, SizeT rb) const {
   return sum(rb) - sum(lb - 1);
 }
 
+//! Add x to element at given index
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
 void FenwickTree<DataT, SizeT>::Add(SizeT idx, DataT x) {
@@ -51,6 +58,7 @@ void FenwickTree<DataT, SizeT>::Add(SizeT idx, DataT x) {
   }
 }
 
+//! Upper bound on prefix sums
 template <class DataT, class SizeT>
   requires std::integral<DataT> && std::signed_integral<SizeT>
 SizeT FenwickTree<DataT, SizeT>::UpperBound(DataT x) const {
