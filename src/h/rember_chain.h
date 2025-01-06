@@ -25,7 +25,7 @@ template <class CodeT>
 class RemberChain : public BaseChain<CodeT> {
  public:
   //! Set curr_state_ and max_state_ to undefined, initialize memory_ and rng_
-  RemberChain(int memory = 1);
+  explicit RemberChain(int memory = 1);
 
   //! Learn from the sequence given as pair of iterators,
   //! move to last state in sequence if needed

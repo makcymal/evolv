@@ -38,8 +38,7 @@ template <class StateT, class CodeT = int>
 class MarkovChain {
  public:
   //! Instantiate chain tracking the given number of previous states
-  MarkovChain(int memory = 0) : impl(new Impl(memory)) {
-  }
+  explicit MarkovChain(int memory = 0);
 
   //! Learn from sequence given as std::vector,
   //! move to last state in sequence if needed
@@ -74,7 +73,7 @@ class MarkovChain {
  private:
   //! Private implementation class
   class Impl;
-  
+
   //! Private implementation object
   std::unique_ptr<Impl> impl;
 };

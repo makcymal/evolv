@@ -19,7 +19,7 @@ class MarkovChain<StateT, CodeT>::Impl {
   //! Instantiate Impl with the memory size representing number of
   //! previous states remembered. Create underlying BaseChain based
   //! on the memory value: ForgorChain if memory=0, else RemberChain.
-  Impl(int memory) {
+  explicit Impl(int memory) {
     assert(memory >= 0 && "Constructing MarkovChain with memory < 0");
     if (memory == 0) {
       chain_ = internal::ForgorChain<CodeT>();
@@ -66,5 +66,12 @@ class MarkovChain<StateT, CodeT>::Impl {
   //! State encoder and decoder (into and from CodeT)
   std::shared_ptr<StateCoder<StateT, CodeT>> state_coder_;
 };
+
+
+template <class StateT, class CodeT>
+  requires std::copy_constructible<StateT> && std::integral<CodeT>
+MarkovChain<StateT, CodeT>::MarkovChain(int memory)
+    : impl(std::make_unique<Impl>(memory)) {
+}
 
 }  // namespace evolv

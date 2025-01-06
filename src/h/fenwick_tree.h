@@ -18,7 +18,7 @@ class FenwickTree {
   FenwickTree() = default;
   
   //! Costruct Fenwick tree of given size filled with zeros
-  FenwickTree(SizeT size);
+  explicit FenwickTree(SizeT size);
 
   //! Return number of elements in Fenwick tree
   SizeT Size() const;
