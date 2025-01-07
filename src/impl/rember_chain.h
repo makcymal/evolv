@@ -52,7 +52,8 @@ class RemberChain : public BaseChain<CodeT> {
     // given the sequence s[0]..s[i]s[i+1]..s[i+N]..
     // for each d (depth) = 0..N add new transition from s[i] to s[i+d+1]
     for (; it != end; ++it) {
-      for (int dep = 0; dep <= memory_ && dep < static_cast<int>(state.size()); ++dep) {
+      for (int dep = 0; dep <= memory_ && dep < static_cast<int>(state.size());
+           ++dep) {
         transit_counters_[state[dep]][dep].Add(*it, 1);
         total_transitions_ += 1;
       }
@@ -86,17 +87,27 @@ class RemberChain : public BaseChain<CodeT> {
     return next_state;
   }
 
-  //! Set new current state, forget the actual one
+  //! Set new state given as single value, forget the current one
   void SetCurrentState(CodeT state) {
-    assert(!"Unable to set a new state: incorrect size");
+    if (curr_state_.size() == memory_ + 1) {
+      curr_state_.pop_back();
+    }
+    curr_state_.push_back(state);
   }
 
-  //! Set new current state, forget the actual one
-  void SetCurrentState(std::vector<CodeT> state) {
-    assert(state.size() < memory_ + 1 &&
-           "Unable to set a new state: incorrect size");
+  //! Set new state given as pair of iterators, forget the actual one
+  void SetCurrentState(EncodingIter<CodeT> it, EncodingIter<CodeT> end) {
+    for (; it != end; ++it) {
+      if (curr_state_.size() == memory_ + 1) {
+        curr_state_.pop_back();
+      }
+      curr_state_.push_front(*it);
+    }
+  }
 
-    curr_state_ = std::deque<CodeT>(state.begin(), state.begin() + memory_ + 1);
+  //! Get deque of current state, where the first is the last seen state.
+  std::deque<CodeT> GetCurrentState() const {
+    return curr_state_;
   }
 
  private:

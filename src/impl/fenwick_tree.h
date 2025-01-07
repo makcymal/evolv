@@ -13,7 +13,8 @@ template <class DataT, class SizeT = int64_t>
 class FenwickTree {
  public:
   //! Constructs empty Fenwick tree
-  FenwickTree() = default;
+  FenwickTree() : tree_(1, 0) {
+  }
 
   //! Costruct Fenwick tree of given size filled with zeros
   explicit FenwickTree(SizeT size)
@@ -43,9 +44,7 @@ class FenwickTree {
 
   //! Count the sum over segment [lb, rb]
   DataT Sum(SizeT lb, SizeT rb) const {
-    rb++;
-    lb++;
-    return sum(rb) - sum(lb - 1);
+    return Sum(rb) - Sum(lb - 1);
   }
 
   //! Add x to element at given index

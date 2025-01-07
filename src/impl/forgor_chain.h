@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <deque>
 #include <random>
 #include <unordered_map>
 
@@ -62,19 +63,25 @@ class ForgorChain : public BaseChain<CodeT> {
     if (move_to_predicted) {
       curr_state_ = next_state;
     }
-
+    std::cout << "predicted: " << next_state << ' ';
     return next_state;
   }
 
-  //! Set new current state, forget the actual one
+  //! Set new state given as single value, forget the current one
   void SetCurrentState(CodeT state) {
     curr_state_ = state;
   }
 
-  //! Set new current state, forget the actual one
-  void SetCurrentState(std::vector<CodeT> state) {
-    assert(!state.empty() && "Vector of new current set is empty");
-    curr_state_ = state.back();
+  //! Set new state given as pair of iterators, forget the actual one
+  void SetCurrentState(EncodingIter<CodeT> it, EncodingIter<CodeT> end) {
+    for (; it != end; ++it) {
+      curr_state_ = *it;
+    }
+  }
+
+  //! Get deque of current state, where the first is the last seen state.
+  std::deque<CodeT> GetCurrentState() const {
+    return {curr_state_};
   }
 
  private:

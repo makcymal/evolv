@@ -33,6 +33,8 @@ endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(GTest REQUIRED)
+
 
 # test executable target
 
@@ -49,3 +51,5 @@ add_executable(test
 )
 
 target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(test PRIVATE GTest::GTest)

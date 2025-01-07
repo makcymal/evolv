@@ -1,8 +1,11 @@
 #pragma once
 
+#include <iostream>
 #include <unordered_map>
 #include <vector>
 
+
+namespace evolv::internal {
 
 /*!
   \brief State encoder and decoder (into and from CodeT)
@@ -28,6 +31,7 @@ class StateCoder {
 
   //! Map code to state
   StateT Decode(CodeT code) {
+    std::cout << "decoded to: " << decoder_[code] << std::endl;
     return decoder_[code];
   }
 
@@ -37,3 +41,5 @@ class StateCoder {
   //! Stores mapping from code to state
   std::vector<StateT> decoder_;
 };
+
+}  // namespace evolv::internal

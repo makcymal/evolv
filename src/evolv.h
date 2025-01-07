@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <concepts>
+#include <deque>
 #include <memory>
 #include <vector>
 
@@ -14,7 +15,7 @@
 
 //! Entry-point namespace for the library
 namespace evolv {
-  
+
 /*!
   \brief Class representing the Markov chain
 
@@ -36,7 +37,7 @@ class MarkovChain {
     } else {
       chain_ = std::make_unique<internal::RemberChain<CodeT>>(memory);
     }
-    state_coder_ = std::make_shared<StateCoder<StateT, CodeT>>();
+    state_coder_ = std::make_shared<internal::StateCoder<StateT, CodeT>>();
   }
 
   ~MarkovChain() = default;
@@ -51,9 +52,9 @@ class MarkovChain {
   //! move to last state in sequence if needed
   template <class IterT>
     requires utils::is_iterator<IterT, StateT>
-  void FeedSequence(IterT begin, IterT end, bool move_to_last = false) {
-    chain_->FeedSequence(EncodingIter(begin, state_coder_),
-                        EncodingIter(end, state_coder_), move_to_last);
+  void FeedSequence(IterT it, IterT end, bool move_to_last = false) {
+    chain_->FeedSequence(EncodingIter(it, state_coder_),
+                         EncodingIter(end, state_coder_), move_to_last);
   }
 
   //! Predict the subsequent state from the current state,
@@ -62,21 +63,36 @@ class MarkovChain {
     return state_coder_.Decode[chain_->PredictState(move_to_predicted)];
   }
 
-  //! Set new current state, forget the actual one
+  //! Set new state given as single value, forget the current one
   void SetCurrentState(StateT state) {
-    chain_->SetCurrentState(state);
+    chain_->SetCurrentState(state_coder_->Encode(state));
   }
 
-  //! Set new current state, forget the actual one
-  void SetCurrentState(std::vector<StateT> state) {
-    chain_->SetCurrentState(state);
+  //! Set new state given as pair of iterators, forget the actual one.
+  //! The current state is defined as last memory_ + 1 states
+  //! when iterating from it to end.
+  template <class IterT>
+    requires utils::is_iterator<IterT, StateT>
+  void SetCurrentState(IterT it, IterT end) {
+    chain_->SetCurrentState(EncodingIter(it, state_coder_),
+                            EncodingIter(end, state_coder_));
+  }
+
+  //! Get deque of current state, where the first is the last seen state.
+  std::deque<StateT> GetCurrentState() const {
+    std::deque<CodeT> encoded_state = chain_->GetCurrentState();
+    std::deque<StateT> decoded_state(encoded_state.size());
+    for (int i = 0; i < static_cast<int>(decoded_state.size()); ++i) {
+      decoded_state[i] = state_coder_->Decode(encoded_state[i]);
+    }
+    return decoded_state;
   }
 
  private:
   //! Chain implementation, either ForgorChain or RemberChain
   std::unique_ptr<internal::BaseChain<CodeT>> chain_;
   //! State encoder and decoder (into and from CodeT)
-  std::shared_ptr<StateCoder<StateT, CodeT>> state_coder_;
+  std::shared_ptr<internal::StateCoder<StateT, CodeT>> state_coder_;
 };
 
 }  // namespace evolv

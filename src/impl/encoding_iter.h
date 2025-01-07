@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <iostream>
 #include <memory>
 
 #include "state_coder.h"
@@ -27,6 +28,8 @@ class EncodingIterIface {
 
   //! Advance iterator
   virtual void Advance() = 0;
+  
+  virtual bool operator==(const EncodingIterIface<CodeT> &other) const;
 };
 
 
@@ -50,7 +53,7 @@ class EncodingIterImpl : public EncodingIterIface<CodeT> {
 
   //! Dereference iterator and encode the value it holds into CodeT
   CodeT EncodeCurrent() const {
-    return state_coder_.Encode(*iter_);
+    return state_coder_->Encode(*iter_);
   }
 
   //! Advance iterator
@@ -60,9 +63,10 @@ class EncodingIterImpl : public EncodingIterIface<CodeT> {
 
   //! Binary comparison, it dynamic_cast's EncodingIterIface to this class
   bool operator==(const EncodingIterIface<CodeT> &other) const {
-    return iter_ ==
-           dynamic_cast<const EncodingIterImpl<CodeT, IterT, StateT> &>(other)
-               .iter_;
+    auto other_iter =
+        dynamic_cast<const EncodingIterImpl<CodeT, IterT, StateT> &>(other)
+            .iter_;
+    return iter_ == other_iter;
   }
 
  private:
@@ -106,13 +110,13 @@ class EncodingIter {
     return *this;
   }
 
-  //! Binary comparison that always boiles down to comparison between
+  //! Binary comparison that always boils down to comparison between
   //! two EncodingIterImpl's.
   bool operator==(const EncodingIter<CodeT> &other) const {
-    return impl_ == other.impl_;
+    return *impl_ == *other.impl_;
   }
 
-  //! Binary comparison that boiles dows to inverting operator==
+  //! Binary comparison that boils dows to inverting operator==
   bool operator!=(const EncodingIter<CodeT> &other) const {
     return !(*this == other);
   }
