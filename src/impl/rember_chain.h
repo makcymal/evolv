@@ -72,9 +72,7 @@ class RemberChain : public BaseChain<CodeT> {
   //! Predict the subsequent state from the current state,
   //! move to predicted state if needed
   CodeT PredictState(bool move_to_predicted = false) {
-    assert(
-        curr_state_[0] != -1 &&
-        "No FeedSequence called with sequence of length greater than memory");
+    assert(curr_state_[0] != -1 && "No current state available");
 
     int64_t x = rng_() % total_transitions_;
     CodeT next_state = UpperBound(x);

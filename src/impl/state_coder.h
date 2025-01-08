@@ -31,8 +31,14 @@ class StateCoder {
 
   //! Map code to state
   StateT Decode(CodeT code) {
-    std::cout << "decoded to: " << decoder_[code] << std::endl;
+    // std::cout << "decoded to: " << decoder_[code] << std::endl;
     return decoder_[code];
+  }
+  
+  void dbg() {
+    for (int i = 0; i < (int)decoder_.size(); ++i) {
+      std::cout << "state " << decoder_[i] << " has code " << i << std::endl;
+    }
   }
 
  private:

@@ -41,11 +41,14 @@ class ForgorChain : public BaseChain<CodeT> {
     }
 
     CodeT state = *it;
+    // std::cout << "fed sequence: " << *it << ' ';
     ++it;
     for (; it != end; ++it) {
+      // std::cout << *it << ' ';
       transit_counters_[state].Add(*it, 1);
       state = *it;
     }
+    // std::cout << std::endl;
 
     if (move_to_last) {
       curr_state_ = state;
@@ -57,13 +60,16 @@ class ForgorChain : public BaseChain<CodeT> {
   CodeT PredictState(bool move_to_predicted = false) {
     assert(curr_state_ != -1 && "No current state available");
 
+    // std::cout << "current code = " << curr_state_ << std::endl;
+    // transit_counters_[curr_state_].dbg();
     int64_t x = rng_() % transit_counters_[curr_state_].TotalTransitions();
+    // std::cout << "seeking code with prefix sum " << x << std::endl;
     CodeT next_state = transit_counters_[curr_state_].UpperBound(x);
 
     if (move_to_predicted) {
       curr_state_ = next_state;
     }
-    std::cout << "predicted: " << next_state << ' ';
+    // std::cout << "predicted: " << next_state << ' ';
     return next_state;
   }
 
@@ -101,15 +107,20 @@ class ForgorChain : public BaseChain<CodeT> {
       return total_transitions_;
     }
 
-    //! Add <count> new transitions into state <dest>
-    void Add(CodeT dest, int64_t count) {
-      count_.Add(dest, 1);
-      total_transitions_ += 1;
+    //! Add <cnt> new transitions into state <idx>
+    void Add(CodeT idx, int64_t cnt) {
+      count_.Add(idx, cnt);
+      total_transitions_ += cnt;
     }
 
     //! Query upper bound on prefix sums of Fenwick tree
     CodeT UpperBound(int64_t x) {
       return count_.UpperBound(x);
+    }
+    
+    void dbg() {
+      std::cout << "total transitions is " << total_transitions_ << std::endl;
+      count_.dbg();
     }
 
    private:

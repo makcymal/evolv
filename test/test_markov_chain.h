@@ -18,29 +18,29 @@ class ForgorChainTest : public testing::Test {
   ForgorChainTest()
       : seq1{1, 2, 1, 2, 1, 2, 1},
         seq2{1, 2, 3, 1, 2, 3, 1, 2, 3},
-        coder(std::make_shared<StateCoder<int, short>>()),
+        coder(std::make_shared<StateCoder<int, int>>()),
         chain() {
   }
 
   std::vector<int> seq1, seq2;
-  std::shared_ptr<StateCoder<int, short>> coder;
-  ForgorChain<short> chain;
+  std::shared_ptr<StateCoder<int, int>> coder;
+  ForgorChain<int> chain;
 };
 
-TEST_F(ForgorChainTest, DISABLED_CurrentState) {
-  EXPECT_EQ(chain.GetCurrentState(), std::deque<short>{-1});
+TEST_F(ForgorChainTest, CurrentState) {
+  EXPECT_EQ(chain.GetCurrentState(), std::deque<int>{-1});
   chain.SetCurrentState(13);
-  EXPECT_EQ(chain.GetCurrentState(), std::deque<short>{13});
+  EXPECT_EQ(chain.GetCurrentState(), std::deque<int>{13});
   std::vector<int> state{3, 5, 7};
   chain.SetCurrentState(EncodingIter(state.begin(), coder),
                         EncodingIter(state.end(), coder));
-  EXPECT_EQ(chain.GetCurrentState(), std::deque<short>{coder->Encode(7)});
+  EXPECT_EQ(chain.GetCurrentState(), std::deque<int>{coder->Encode(7)});
   chain.FeedSequence(EncodingIter(seq1.begin(), coder),
                      EncodingIter(seq1.end(), coder), true);
-  EXPECT_EQ(chain.GetCurrentState(), std::deque<short>{coder->Encode(1)});
+  EXPECT_EQ(chain.GetCurrentState(), std::deque<int>{coder->Encode(1)});
 }
 
-TEST_F(ForgorChainTest, DefinitePredictState) {
+TEST_F(ForgorChainTest, Seq12PredictState) {
   chain.FeedSequence(EncodingIter(seq1.begin(), coder),
                      EncodingIter(seq1.end(), coder), true);
   EXPECT_EQ(coder->Decode(chain.PredictState()), 2);
@@ -51,26 +51,107 @@ TEST_F(ForgorChainTest, DefinitePredictState) {
 
   chain.SetCurrentState(coder->Encode(2));
   EXPECT_EQ(coder->Decode(chain.PredictState()), 1);
+}
 
+TEST_F(ForgorChainTest, Seq123PredictState) {
   chain.FeedSequence(EncodingIter(seq2.begin(), coder),
                      EncodingIter(seq2.end(), coder), true);
-  EXPECT_EQ(coder->Decode(chain.GetCurrentState()[0]), 3);
+  EXPECT_EQ(coder->Decode(chain.PredictState()), 1);
   EXPECT_EQ(coder->Decode(chain.PredictState(true)), 1);
   EXPECT_EQ(coder->Decode(chain.PredictState(true)), 2);
-  EXPECT_EQ(coder->Decode(chain.GetCurrentState()[0]), 2);
-  
-  // int count_1 = 0, count_3 = 0;
-  // for (int i = 0; i < 100; ++i) {
-  //   int pred = chain.PredictState();
-  //   pred = coder->Decode(pred);
-  //   EXPECT_TRUE(pred == 1 or pred == 3);
-  //   if (pred == 1) {
-  //     count_1 += 1;
-  //   } else {
-  //     count_3 += 1;
-  //   }
-  // }
-  // std::cout << std::endl << count_1 << ' ' << count_3 << std::endl;
-  // EXPECT_GT(count_1, count_3);
-  // EXPECT_GT(count_3, 0);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 3);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 1);
+  EXPECT_EQ(coder->Decode(chain.GetCurrentState()[0]), 1);
+}
+
+TEST_F(ForgorChainTest, Seq123StateCoding) {
+  chain.FeedSequence(EncodingIter(seq2.begin(), coder),
+                     EncodingIter(seq2.end(), coder), true);
+  EXPECT_EQ(coder->Encode(1), 0);
+  EXPECT_EQ(coder->Encode(2), 1);
+  EXPECT_EQ(coder->Encode(3), 2);
+  EXPECT_EQ(coder->Decode(0), 1);
+  EXPECT_EQ(coder->Decode(1), 2);
+  EXPECT_EQ(coder->Decode(2), 3);
+}
+
+TEST_F(ForgorChainTest, Seq12And123StateCoding) {
+  chain.FeedSequence(EncodingIter(seq1.begin(), coder),
+                     EncodingIter(seq1.end(), coder), true);
+  EXPECT_EQ(coder->Encode(1), 0);
+  EXPECT_EQ(coder->Encode(2), 1);
+  EXPECT_EQ(coder->Decode(0), 1);
+  EXPECT_EQ(coder->Decode(1), 2);
+  chain.FeedSequence(EncodingIter(seq2.begin(), coder),
+                     EncodingIter(seq2.end(), coder), true);
+  EXPECT_EQ(coder->Encode(1), 0);
+  EXPECT_EQ(coder->Encode(2), 1);
+  EXPECT_EQ(coder->Decode(0), 1);
+  EXPECT_EQ(coder->Decode(1), 2);
+  EXPECT_EQ(coder->Encode(3), 2);
+  EXPECT_EQ(coder->Decode(2), 3);
+}
+
+TEST_F(ForgorChainTest, Seq12PredictAnd123StateCoding) {
+  chain.FeedSequence(EncodingIter(seq1.begin(), coder),
+                     EncodingIter(seq1.end(), coder), true);
+  EXPECT_EQ(coder->Decode(chain.PredictState()), 2);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 2);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 1);
+  chain.FeedSequence(EncodingIter(seq2.begin(), coder),
+                     EncodingIter(seq2.end(), coder), true);
+  EXPECT_EQ(coder->Encode(1), 0);
+  EXPECT_EQ(coder->Encode(2), 1);
+  EXPECT_EQ(coder->Encode(3), 2);
+  EXPECT_EQ(coder->Decode(0), 1);
+  EXPECT_EQ(coder->Decode(1), 2);
+  EXPECT_EQ(coder->Decode(2), 3);
+}
+
+TEST_F(ForgorChainTest, Seq12And123Predict) {
+  chain.FeedSequence(EncodingIter(seq1.begin(), coder),
+                     EncodingIter(seq1.end(), coder), true);
+  EXPECT_EQ(coder->Decode(chain.PredictState()), 2);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 2);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 1);
+  chain.FeedSequence(EncodingIter(seq2.begin(), coder),
+                     EncodingIter(seq2.end(), coder), true);
+  EXPECT_EQ(coder->Decode(chain.PredictState()), 1);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 1);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 2);
+}
+
+TEST_F(ForgorChainTest, IndefiniteForgorPredict) {
+  chain.FeedSequence(EncodingIter(seq1.begin(), coder),
+                     EncodingIter(seq1.end(), coder), true);
+  chain.FeedSequence(EncodingIter(seq2.begin(), coder),
+                     EncodingIter(seq2.end(), coder), true);
+
+  chain.SetCurrentState(coder->Encode(2));
+  int count_1 = 0, count_3 = 0;
+  for (int i = 0; i < 100; ++i) {
+    int next_state = coder->Decode(chain.PredictState());
+    EXPECT_TRUE(next_state == 1 or next_state == 3);
+    if (next_state == 1) {
+      count_1 += 1;
+    } else {
+      count_3 += 1;
+    }
+  }
+  EXPECT_LT(abs(count_1 - count_3), 20);
+
+  chain.FeedSequence(EncodingIter(seq1.begin(), coder),
+                     EncodingIter(seq1.end(), coder));
+  count_1 = 0, count_3 = 0;
+  for (int i = 0; i < 100; ++i) {
+    int next_state = coder->Decode(chain.PredictState());
+    EXPECT_TRUE(next_state == 1 or next_state == 3);
+    if (next_state == 1) {
+      count_1 += 1;
+    } else {
+      count_3 += 1;
+    }
+  }
+  EXPECT_GT(count_1, count_3);
+  EXPECT_GT(count_3, 0);
 }

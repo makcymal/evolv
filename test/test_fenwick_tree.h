@@ -51,6 +51,17 @@ TEST(FenwickTreeTest, AddCubics) {
   EXPECT_EQ(ft.Sum(1, 9), 2025);
 }
 
+TEST(FenwickTreeTest, UpperBound) {
+  FenwickTree<int> ft;
+  ft.Add(0, 3);
+  // ft.dbg();
+  ft.Add(2, 3);
+  // ft.dbg();
+  EXPECT_EQ(ft.UpperBound(3), 2);
+  EXPECT_EQ(ft.UpperBound(4), 2);
+  EXPECT_EQ(ft.UpperBound(5), 2);
+}
+
 
 // FenwickTreeFixtTest is the suite for FenwickTree built on NUMS
 

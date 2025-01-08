@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <cstdint>
+#include <iostream>
 #include <vector>
 
 
@@ -29,7 +30,14 @@ class FenwickTree {
 
   //! Resize tree: shrink or expand
   void Resize(SizeT new_size) {
-    tree_.resize(static_cast<std::size_t>(new_size) + 1, 0);
+    new_size += 1;
+    auto old_size = Size() + 1;
+    tree_.resize(new_size, 0);
+    for (SizeT idx = old_size; idx < new_size; ++idx) {
+      auto sum = Sum(idx - (idx & -idx), old_size - 2);
+      // std::cout << "adding to " << idx - 1 << " sum " << sum << std::endl;
+      tree_[idx] += sum;
+    }
   }
 
   //! Count the sum over prefix [0, rb]
@@ -44,7 +52,13 @@ class FenwickTree {
 
   //! Count the sum over segment [lb, rb]
   DataT Sum(SizeT lb, SizeT rb) const {
-    return Sum(rb) - Sum(lb - 1);
+    if (rb < lb) {
+      return 0;
+    }
+    // std::cout << "sum on [" << lb << ", " << rb << "] = ";
+    int sum_rb = Sum(rb), sum_lb = Sum(lb - 1);
+    // std::cout << sum_rb << " - " << sum_lb << std::endl;
+    return sum_rb - sum_lb;
   }
 
   //! Add x to element at given index
@@ -53,7 +67,7 @@ class FenwickTree {
       Resize(idx + 1);
     }
     idx++;
-    for (; idx < static_cast<SizeT>(tree_.size()); idx += (idx & -idx)) {
+    for (; idx < Size() + 1; idx += (idx & -idx)) {
       tree_[idx] += x;
     }
   }
@@ -69,6 +83,13 @@ class FenwickTree {
       }
     }
     return idx;
+  }
+
+  void dbg() {
+    for (int i = 1; i < (int)(tree_.size()); ++i) {
+      std::cout << tree_[i] << ' ';
+    }
+    std::cout << std::endl;
   }
 
  private:
