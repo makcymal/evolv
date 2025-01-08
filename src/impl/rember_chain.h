@@ -30,7 +30,6 @@ class RemberChain : public BaseChain<CodeT> {
   explicit RemberChain(int memory = 1) {
     assert(memory >= 1 && "Constructing RemberChain with memory < 1");
     memory_ = memory;
-    total_transitions_ = 0;
     max_state_ = -1;
     rng_ = std::mt19937_64(
         std::chrono::steady_clock::now().time_since_epoch().count());
@@ -54,10 +53,9 @@ class RemberChain : public BaseChain<CodeT> {
     for (; it != end; ++it) {
       for (int dep = 0; dep <= memory_ && dep < static_cast<int>(state.size());
            ++dep) {
-        transit_counters_[state[dep]][dep].Add(*it, 1);
-        total_transitions_ += 1;
+        GetTransitCounter(state[dep], dep).Add(*it, 1);
       }
-      if (static_cast<int>(state.size()) > memory_ + 1) {
+      if (static_cast<int>(state.size()) >= memory_ + 1) {
         state.pop_back();
       }
       state.push_front(*it);
@@ -74,7 +72,9 @@ class RemberChain : public BaseChain<CodeT> {
   CodeT PredictState(bool move_to_predicted = false) {
     assert(curr_state_[0] != -1 && "No current state available");
 
-    int64_t x = rng_() % total_transitions_;
+    int64_t x = rng_() % TotalTransitions();
+    // std::cout << "seeking for upper bound on answer space with x = " << x
+    // << std::endl;
     CodeT next_state = UpperBound(x);
 
     if (move_to_predicted) {
@@ -87,7 +87,7 @@ class RemberChain : public BaseChain<CodeT> {
 
   //! Set new state given as single value, forget the current one
   void SetCurrentState(CodeT state) {
-    if (curr_state_.size() == memory_ + 1) {
+    if (static_cast<int>(curr_state_.size()) >= memory_ + 1) {
       curr_state_.pop_back();
     }
     curr_state_.push_back(state);
@@ -96,7 +96,7 @@ class RemberChain : public BaseChain<CodeT> {
   //! Set new state given as pair of iterators, forget the actual one
   void SetCurrentState(EncodingIter<CodeT> it, EncodingIter<CodeT> end) {
     for (; it != end; ++it) {
-      if (curr_state_.size() == memory_ + 1) {
+      if (static_cast<int>(curr_state_.size()) == memory_ + 1) {
         curr_state_.pop_back();
       }
       curr_state_.push_front(*it);
@@ -119,12 +119,26 @@ class RemberChain : public BaseChain<CodeT> {
   //! For all seen states count transitions into subsequent states come
   //! in less than memory_ + 1 steps
   std::unordered_map<CodeT, TransitCounter> transit_counters_;
-  //! Total number of all transitions
-  int64_t total_transitions_;
   //! State with maximum number ever seen
   CodeT max_state_;
   // Random number generator, used in predicting next state
   std::mt19937_64 rng_;
+
+  FenwickTree<int64_t, CodeT> &GetTransitCounter(CodeT from, int depth) {
+    if (static_cast<int>(transit_counters_[from].size()) <= depth) {
+      transit_counters_[from].resize(depth + 1);
+    }
+    return transit_counters_[from][depth];
+  }
+
+  int64_t TotalTransitions() {
+    int total_transitions = 0;
+    for (int dep = 0;
+         dep <= memory_ && dep < static_cast<int>(curr_state_.size()); ++dep) {
+      total_transitions += GetTransitCounter(curr_state_[dep], dep).Total();
+    }
+    return total_transitions;
+  }
 
   //! Upper bound for the next state from the current one
   CodeT UpperBound(int64_t x) {

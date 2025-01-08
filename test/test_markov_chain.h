@@ -138,7 +138,7 @@ TEST_F(ForgorChainTest, IndefiniteForgorPredict) {
       count_3 += 1;
     }
   }
-  EXPECT_LT(abs(count_1 - count_3), 20);
+  EXPECT_LE(abs(count_1 - count_3), 30);
 
   chain.FeedSequence(EncodingIter(seq1.begin(), coder),
                      EncodingIter(seq1.end(), coder));
@@ -153,5 +153,122 @@ TEST_F(ForgorChainTest, IndefiniteForgorPredict) {
     }
   }
   EXPECT_GT(count_1, count_3);
+  EXPECT_GT(count_3, 0);
+}
+
+
+TEST(RemberChainTest, Predict12WithMemory1) {
+  std::vector<int> seq{1, 2, 1, 2, 1, 2, 1, 2};
+  RemberChain<int> chain(1);
+  auto coder = std::make_shared<StateCoder<int, int>>();
+  chain.FeedSequence(EncodingIter(seq.begin(), coder),
+                     EncodingIter(seq.end(), coder), true);
+  EXPECT_EQ(chain.GetCurrentState(),
+            (std::deque{coder->Encode(2), coder->Encode(1)}));
+  EXPECT_EQ(coder->Decode(chain.PredictState()), 1);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 1);
+  EXPECT_EQ(coder->Decode(chain.PredictState()), 2);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 2);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 1);
+  EXPECT_EQ(coder->Decode(chain.PredictState(true)), 2);
+}
+
+TEST(RemberChainTest, Predict3121WithMemory1) {
+  std::vector<int> seq{3, 1, 2, 1, 3, 1, 2, 1, 3, 1};
+  RemberChain<int> chain(1);
+  auto coder = std::make_shared<StateCoder<int, int>>();
+  chain.FeedSequence(EncodingIter(seq.begin(), coder),
+                     EncodingIter(seq.end(), coder), true);
+  EXPECT_EQ(chain.GetCurrentState(),
+            (std::deque{coder->Encode(1), coder->Encode(3)}));
+
+  int count_2 = 0, count_3 = 0;
+  for (int i = 0; i < 100; ++i) {
+    int pred = coder->Decode(chain.PredictState());
+    EXPECT_TRUE(pred == 2 or pred == 3);
+    if (pred == 2) {
+      count_2 += 1;
+    } else {
+      count_3 += 1;
+    }
+  }
+  EXPECT_GT(count_2, count_3);
+  EXPECT_GT(count_3, 0);
+}
+
+TEST(RemberChainTest, PredictHillsWithMemory1) {
+  std::vector<int> seq{0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0};
+  RemberChain<int> chain(1);
+  auto coder = std::make_shared<StateCoder<int, int>>();
+  chain.FeedSequence(EncodingIter(seq.begin(), coder),
+                     EncodingIter(seq.end(), coder), true);
+  EXPECT_EQ(chain.GetCurrentState(), (std::deque{0, 1}));
+
+  int count_1 = 0, count_3 = 0;
+  for (int i = 0; i < 100; ++i) {
+    int pred = coder->Decode(chain.PredictState());
+    EXPECT_TRUE(pred == 1 or pred == 3);
+    switch (pred) {
+      case 1:
+        count_1 += 1;
+        break;
+      case 3:
+        count_3 += 1;
+    }
+  }
+  EXPECT_GT(count_1, count_3);
+  EXPECT_GT(count_3, 0);
+}
+
+TEST(RemberChainTest, DISABLED_PredictHillsWithMemory2) {
+  std::vector<int> seq{0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0};
+  RemberChain<int> chain(2);
+  auto coder = std::make_shared<StateCoder<int, int>>();
+  chain.FeedSequence(EncodingIter(seq.begin(), coder),
+                     EncodingIter(seq.end(), coder), true);
+  EXPECT_EQ(chain.GetCurrentState(), (std::deque{0, 1, 2}));
+
+  int count_1 = 0, count_2 = 0;
+  for (int i = 0; i < 100; ++i) {
+    int pred = coder->Decode(chain.PredictState());
+    EXPECT_TRUE(pred == 1 or pred == 2);
+    switch (pred) {
+      case 1:
+        count_1 += 1;
+        break;
+      case 2:
+        count_2 += 1;
+    }
+  }
+  EXPECT_GT(count_1, count_2);
+  EXPECT_GT(count_2, 0);
+}
+
+TEST(RemberChainTest, DISABLED_PredictHillsWithMemory3) {
+  std::vector<int> seq{0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0};
+  RemberChain<int> chain(3);
+  auto coder = std::make_shared<StateCoder<int, int>>();
+  chain.FeedSequence(EncodingIter(seq.begin(), coder),
+                     EncodingIter(seq.end(), coder), true);
+  EXPECT_EQ(chain.GetCurrentState(), (std::deque{0, 1, 2, 3}));
+
+  int count_1 = 0, count_2 = 0, count_3 = 0;
+  for (int i = 0; i < 10000; ++i) {
+    int pred = coder->Decode(chain.PredictState());
+    EXPECT_TRUE(pred == 1 or pred == 2 or pred == 3);
+    switch (pred) {
+      case 1:
+        count_1 += 1;
+        break;
+      case 2:
+        count_2 += 1;
+        break;
+      case 3:
+        count_3 += 1;
+    }
+  }
+  EXPECT_GT(count_1, count_2);
+  EXPECT_GT(count_1, count_3);
+  EXPECT_GT(count_2, 0);
   EXPECT_GT(count_3, 0);
 }

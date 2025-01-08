@@ -60,6 +60,10 @@ class FenwickTree {
     // std::cout << sum_rb << " - " << sum_lb << std::endl;
     return sum_rb - sum_lb;
   }
+  
+  DataT Total() const {
+    return total_;
+  }
 
   //! Add x to element at given index
   void Add(SizeT idx, DataT x) {
@@ -70,6 +74,7 @@ class FenwickTree {
     for (; idx < Size() + 1; idx += (idx & -idx)) {
       tree_[idx] += x;
     }
+    total_ += x;
   }
 
   //! Upper bound on prefix sums
@@ -94,6 +99,7 @@ class FenwickTree {
 
  private:
   std::vector<DataT> tree_;
+  DataT total_ = 0;
 };
 
 }  // namespace evolv::internal
