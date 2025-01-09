@@ -1,10 +1,13 @@
 #pragma once
 
+#include <chrono>
 #include <concepts>
-#include <vector>
 #include <deque>
+#include <random>
+#include <vector>
 
 #include "encoding_iter.h"
+#include "src/impl/fenwick_tree.h"
 
 
 //! Namespace to keep all implementations hidden
@@ -13,7 +16,7 @@ namespace evolv::internal {
 /*!
   \brief Base class for chain implementation
 
-  This is the abstract class, MarkovChain::Impl stores it's instance
+  This is the abstract class, MarkovChain stores it's instance
   as chain implementation. Both Forgor and Rember chains inherits it. This
   operates on sequences encoded by StateCoder, which are always integral.
 */
@@ -21,28 +24,60 @@ template <class CodeT>
   requires std::integral<CodeT>
 class BaseChain {
  public:
-  virtual ~BaseChain() = default;
+  BaseChain(int memory_size, int random_state) : memory_size_(memory_size) {
+    if (random_state == -1) {
+      rng_ = std::mt19937_64(
+          std::chrono::steady_clock::now().time_since_epoch().count());
+    } else {
+      rng_ = std::mt19937_64(random_state);
+    }
+  }
 
-  //! Learn from the sequence given as pair of iterators,
-  //! move to last state in sequence if needed
+  //! Get deque of memory, where the first is the last seen state.
+  std::deque<CodeT> GetMemory() const {
+    return memory_;
+  }
+
+  //! Push a new state given as single value into memory forgetting the oldest
+  //! states
+  void UpdateMemory(CodeT state) {
+    if (static_cast<int>(memory_.size()) >= memory_size_) {
+      memory_.pop_back();
+    }
+    memory_.push_front(state);
+  }
+
+  //! Push a new state given as pair of iterators into memory forgetting the
+  //! oldest states
+  void UpdateMemory(EncodingIter<CodeT> it, EncodingIter<CodeT> end) {
+    for (; it != end; ++it) {
+      if (static_cast<int>(memory_.size()) >= memory_size_) {
+        memory_.pop_back();
+      }
+      memory_.push_front(*it);
+    }
+  }
+
+  virtual ~BaseChain() = 0;
+
+  //! Learn from sequence and move to last state in sequence if needed or if
+  //! there is no memory
   virtual void FeedSequence(EncodingIter<CodeT> it, EncodingIter<CodeT> end,
-                            bool move_to_last = false) = 0;
+                            bool update_memory = false) = 0;
 
-  //! Predict the subsequent state from the current state,
+  //! Predict the subsequent state based on current state and possibly memory,
   //! move to predicted state if needed
-  virtual CodeT PredictState(bool move_to_predicted = false) = 0;
+  virtual CodeT PredictState(bool update_memory = false) = 0;
 
-  //! Set new state given as single value, forget the current one
-  virtual void SetCurrentState(CodeT state) = 0;
+ protected:
+  using CountT = int64_t;
+  using FenwickCounter = FenwickTree<CountT, CodeT>;
 
-  //! Set new state given as pair of iterators, forget the actual one.
-  //! The current state is defined as last memory_ + 1 states
-  //! when iterating from it to end.
-  virtual void SetCurrentState(EncodingIter<CodeT> it,
-                               EncodingIter<CodeT> end) = 0;
-                          
-  //! Get deque of current state, where the first is the last seen state.     
-  virtual std::deque<CodeT> GetCurrentState() const = 0;
+  int memory_size_;
+  // Last states where the chain ends
+  std::deque<CodeT> memory_;
+  // Random number generator, used in predicting next state
+  mutable std::mt19937_64 rng_;
 };
 
 }  // namespace evolv::internal

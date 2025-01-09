@@ -21,71 +21,72 @@ namespace evolv {
 
   Chain states have type StateT that must be copy-constructible.
   Internally states are coded as integral CodeT (int by default).
-  When instantiating user can choose how many previous states to track.
-  After learning from sequences given in FeedSequence, while keeping
-  track on currect state, chain can predict the subsequent state.
+
+  By definition, Markov chain is memoryless,
+  which means that chains memory is limited to only one current state.
+  In this case, ForgorChain is used as chain implementation.
+  evolv proposes extension - Markov chain tracking some number > 0
+  of previously visited states. This is called memory. In this case, RemberChain
+  is used as chain implementation. When instantiating user can choose how many
+  previous states to track. MarkovChain will manage implementation itself.
+
+  After learning from sequences given in FeedSequence,
+  while keeping track on currect state, chain can predict the subsequent state.
 */
 template <class StateT, class CodeT = int>
   requires std::copy_constructible<StateT> && std::integral<CodeT>
 class MarkovChain {
  public:
   //! Instantiate chain tracking the given number of previous states
-  explicit MarkovChain(int memory = 0) {
-    assert(memory >= 0 && "Constructing MarkovChain with memory < 0");
-    if (memory == 0) {
-      chain_ = std::make_unique<internal::ForgorChain<CodeT>>();
+  explicit MarkovChain(int memorize_previous = 0, int random_state = -1) {
+    if (memorize_previous <= 0) {
+      chain_ = std::make_unique<internal::ForgorChain<CodeT>>(random_state);
     } else {
-      chain_ = std::make_unique<internal::RemberChain<CodeT>>(memory);
+      chain_ = std::make_unique<internal::RemberChain<CodeT>>(memorize_previous,
+                                                              random_state);
     }
     state_coder_ = std::make_shared<internal::StateCoder<StateT, CodeT>>();
   }
 
   ~MarkovChain() = default;
 
-  //! Learn from sequence given as std::vector,
-  //! move to last state in sequence if needed
-  void FeedSequence(const std::vector<StateT> &seq, bool move_to_last = false) {
-    FeedSequence(seq.begin(), seq.end(), move_to_last);
-  }
-
-  //! Learn from sequence given as pair of iterators,
-  //! move to last state in sequence if needed
+  //! Learn from sequence and move to last state in sequence if needed
   template <class IterT>
     requires utils::is_iterator<IterT, StateT>
-  void FeedSequence(IterT it, IterT end, bool move_to_last = false) {
+  void FeedSequence(IterT it, IterT end, bool update_memory = false) {
     chain_->FeedSequence(EncodingIter(it, state_coder_),
-                         EncodingIter(end, state_coder_), move_to_last);
+                         EncodingIter(end, state_coder_), update_memory);
   }
 
-  //! Predict the subsequent state from the current state,
+  //! Predict the subsequent state based on current state and possibly memory,
   //! move to predicted state if needed
-  StateT PredictState(bool move_to_predicted = false) {
-    return state_coder_.Decode[chain_->PredictState(move_to_predicted)];
+  StateT PredictState(bool update_memory = false) {
+    return state_coder_.Decode[chain_->PredictState(update_memory)];
   }
 
-  //! Set new state given as single value, forget the current one
-  void SetCurrentState(StateT state) {
-    chain_->SetCurrentState(state_coder_->Encode(state));
+  //! Push a new state given as single value into memory forgetting the oldest
+  //! states
+  void UpdateMemory(StateT state) {
+    chain_->UpdateMemory(state_coder_->Encode(state));
   }
 
-  //! Set new state given as pair of iterators, forget the actual one.
-  //! The current state is defined as last memory_ + 1 states
-  //! when iterating from it to end.
+  //! Push a new states given as pair of iterators into memory forgetting the
+  //! oldest states
   template <class IterT>
     requires utils::is_iterator<IterT, StateT>
-  void SetCurrentState(IterT it, IterT end) {
-    chain_->SetCurrentState(EncodingIter(it, state_coder_),
-                            EncodingIter(end, state_coder_));
+  void UpdateMemory(IterT it, IterT end) {
+    chain_->UpdateMemory(EncodingIter(it, state_coder_),
+                         EncodingIter(end, state_coder_));
   }
 
-  //! Get deque of current state, where the first is the last seen state.
-  std::deque<StateT> GetCurrentState() const {
-    std::deque<CodeT> encoded_state = chain_->GetCurrentState();
-    std::deque<StateT> decoded_state(encoded_state.size());
-    for (int i = 0; i < static_cast<int>(decoded_state.size()); ++i) {
-      decoded_state[i] = state_coder_->Decode(encoded_state[i]);
+  //! Get deque of memory, where the first is the last seen state.
+  std::deque<StateT> GetMemory() const {
+    std::deque<CodeT> encoded_memory = chain_->GetMemory();
+    std::deque<StateT> decoded_memory(encoded_memory.size());
+    for (int i = 0; i < static_cast<int>(decoded_memory.size()); ++i) {
+      decoded_memory[i] = state_coder_->Decode(encoded_memory[i]);
     }
-    return decoded_state;
+    return decoded_memory;
   }
 
  private:

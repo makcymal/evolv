@@ -8,12 +8,12 @@
     <b><code>evolv</code></b> also has two sides
 </p>
 
-In `evolv`, a `MarkovChain` can be either _stateless_, forgetting about previous states like a standard Markov chain, or stateful, _remembering_ a fixed number of previous states.
-
+By definition, Markov chain is memoryless, which means that chains memory is limited to only one current state. `evolv` proposes extension - Markov chain tracking some number
+of previously visited states - a Markov chain with *memory*. So, the first case is implemented in `ForgorChain` class, _forgetting_ about previous states, and the second one - in `RemberChain` class, _remembering_ a fixed number of previous states.
 
 ### Usage
 
-`MarkovChain` is the class that provides all the necessary functionality. Create an instance of it while deciding how many previous states the chain should remember. Then, use the `FeedSequence` method and pass the sequence of homogeneous elements that the chain should learn from. You can call this method as many times as needed, provided that the subsequent sequences contain homogeneous elements of the same type.
+`MarkovChain` is the class that provides all the necessary functionality. Create an instance of it and decide how many previous states the chain should remember. Then, use the `FeedSequence` method and pass the sequence of homogeneous elements that the chain should learn from. You can call this method as many times as needed, provided that the subsequent sequences contain homogeneous elements of the same type.
 
 The chain initially starts in the state corresponding to the last elements of the lastly fed sequence. Use the `PredictState` method to predict the next state.
 

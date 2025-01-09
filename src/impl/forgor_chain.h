@@ -24,118 +24,58 @@ namespace evolv::internal {
 template <class CodeT>
   requires std::integral<CodeT>
 class ForgorChain : public BaseChain<CodeT> {
+  using typename BaseChain<CodeT>::FenwickCounter;
+  using BaseChain<CodeT>::memory_size_;
+  using BaseChain<CodeT>::memory_;
+  using BaseChain<CodeT>::rng_;
+
  public:
-  //! Set curr_state_ to undefined and initialize rng_
-  ForgorChain() {
-    curr_state_ = -1;
-    rng_ = std::mt19937_64(
-        std::chrono::steady_clock::now().time_since_epoch().count());
+  explicit ForgorChain(int random_state) : BaseChain<CodeT>(1, random_state) {
   }
 
-  //! Learn from the sequence given as pair of iterators,
-  //! move to last state in sequence if needed
+  //! Learn from sequence and move to last state in sequence if needed or if
+  //! there is no memory
   void FeedSequence(EncodingIter<CodeT> it, EncodingIter<CodeT> end,
-                    bool move_to_last = false) {
+                    bool update_memory = false) {
     if (it == end) {
       return;
     }
 
     CodeT state = *it;
-    // std::cout << "fed sequence: " << *it << ' ';
     ++it;
     for (; it != end; ++it) {
-      // std::cout << *it << ' ';
-      transit_counters_[state].Add(*it, 1);
+      transitions_.Get(state).Add(*it, 1);
       state = *it;
     }
-    // std::cout << std::endl;
-
-    if (move_to_last) {
-      curr_state_ = state;
+    if (update_memory || memory_.empty()) {
+      UpdateMemory(state);
     }
   }
 
-  //! Predict the subsequent state from the current state,
+  //! Predict the subsequent state based on current state and possibly memory,
   //! move to predicted state if needed
-  CodeT PredictState(bool move_to_predicted = false) {
-    assert(curr_state_ != -1 && "No current state available");
-
-    // std::cout << "current code = " << curr_state_ << std::endl;
-    // transit_counters_[curr_state_].dbg();
-    int64_t x = rng_() % transit_counters_[curr_state_].TotalTransitions();
-    // std::cout << "seeking code with prefix sum " << x << std::endl;
-    CodeT next_state = transit_counters_[curr_state_].UpperBound(x);
-
-    if (move_to_predicted) {
-      curr_state_ = next_state;
+  CodeT PredictState(bool update_memory = false) {
+    assert(!memory_.empty() && "Call FeedSequence at least once");
+    int64_t x = rng_() % transitions_.Get(memory_[0]).TotalTransitions();
+    CodeT next_state = transitions_.Get(memory_[0]).UpperBound(x);
+    if (update_memory) {
+      UpdateMemory(next_state);
     }
-    // std::cout << "predicted: " << next_state << ' ';
     return next_state;
   }
 
-  //! Set new state given as single value, forget the current one
-  void SetCurrentState(CodeT state) {
-    curr_state_ = state;
-  }
-
-  //! Set new state given as pair of iterators, forget the actual one
-  void SetCurrentState(EncodingIter<CodeT> it, EncodingIter<CodeT> end) {
-    for (; it != end; ++it) {
-      curr_state_ = *it;
-    }
-  }
-
-  //! Get deque of current state, where the first is the last seen state.
-  std::deque<CodeT> GetCurrentState() const {
-    return {curr_state_};
-  }
-
  private:
-  /*!
-    \brief Counts transitions from one state to all states
-
-    The Fenwick tree is used internally to add new transitions and
-    quering upper bound on prefix sums, both in O(logn). The last one
-    is used to predict next state according to how many time it occured.
-  */
-  class TransitCounter {
+  class TransitCounters {
    public:
-    TransitCounter() = default;
-
-    //! Getter for total_transitions_
-    int64_t TotalTransitions() {
-      return total_transitions_;
-    }
-
-    //! Add <cnt> new transitions into state <idx>
-    void Add(CodeT idx, int64_t cnt) {
-      count_.Add(idx, cnt);
-      total_transitions_ += cnt;
-    }
-
-    //! Query upper bound on prefix sums of Fenwick tree
-    CodeT UpperBound(int64_t x) {
-      return count_.UpperBound(x);
-    }
-    
-    void dbg() {
-      std::cout << "total transitions is " << total_transitions_ << std::endl;
-      count_.dbg();
+    FenwickCounter &Get(CodeT from) {
+      return counters_[from];
     }
 
    private:
-    //! Total number of transitions stored in Fenwick tree
-    int64_t total_transitions_ = 0;
-    //! Fenwick tree counts transitions
-    FenwickTree<int64_t, CodeT> count_;
+    std::unordered_map<CodeT, FenwickCounter> counters_;
   };
-
-  // Last state where the chain ends
-  CodeT curr_state_;
   // For all states count transitions to each state
-  std::unordered_map<CodeT, TransitCounter> transit_counters_;
-  // Random number generator, used in predicting next state
-  std::mt19937_64 rng_;
+  TransitCounters transitions_;
 };
 
 }  // namespace evolv::internal
