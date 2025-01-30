@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "src/impl/encoding_iter.h"
-#include "src/impl/state_coder.h"
+#include "instantiate.h"
+
 
 using namespace evolv::internal;
 
@@ -28,10 +28,12 @@ class EncodingIterTest : public testing::Test {
   EncodingIter<int> it, end, end2;
 };
 
+
 TEST_F(EncodingIterTest, EndComparison) {
   EXPECT_NE(it, end);
   EXPECT_EQ(end, end2);
 }
+
 
 TEST_F(EncodingIterTest, RebuiltSequence) {
   std::stringstream rebuilt, target;
@@ -42,6 +44,7 @@ TEST_F(EncodingIterTest, RebuiltSequence) {
   EXPECT_EQ(rebuilt.str(), target.str());
 }
 
+
 TEST_F(EncodingIterTest, StateCodes) {
   EXPECT_EQ(*it, 0);
   EXPECT_EQ(*(++it), 1);
@@ -51,6 +54,7 @@ TEST_F(EncodingIterTest, StateCodes) {
   EXPECT_EQ(*(++it), 1);
   EXPECT_EQ(*(++it), 5);
 }
+
 
 TEST_F(EncodingIterTest, RepeatedState) {
   int first_a = *(++it);

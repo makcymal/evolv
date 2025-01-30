@@ -1,8 +1,11 @@
+#pragma once
+
 #include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "src/impl/state_coder.h"
+#include "instantiate.h"
+
 
 using namespace evolv::internal;
 

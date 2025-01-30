@@ -2,8 +2,8 @@ SHELL = /bin/bash
 CXX = clang++
 CXXFLAGS = -Wall
 
-evolv.so: pymodule.cpp
-	$(CXX) $(CXXFLAGS) -shared -fPIC -o $@ pymodule.cpp
+evolv.so: pymodule.cc
+	$(CXX) $(CXXFLAGS) -shared -fPIC -o $@ pymodule.cc
 
 clean:
 	@rm -f evolv.so

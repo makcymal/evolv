@@ -11,6 +11,9 @@
 #include "base_chain.h"
 #include "fenwick_tree.h"
 
+// todo: remove
+#include "lib/dbg/dbg.h"
+
 
 namespace evolv::internal {
 
@@ -32,15 +35,27 @@ class RemberChain : public BaseChain<CodeT> {
   using BaseChain<CodeT>::rng_;
 
  public:
+  using BaseChain<CodeT>::UpdateMemory;
+  using BaseChain<CodeT>::GetMemory;
+
   //! Set curr_state_ and max_state_ to undefined, initialize memory_ and rng_
   RemberChain(int memorize_previous, int random_state)
       : BaseChain<CodeT>(1 + memorize_previous, random_state), max_state_(0) {
   }
-
-  //! Learn from the sequence given as pair of iterators,
-  //! move to last state in sequence if needed
+  
+  //! Learn from sequence and move to last state in sequence if needed or if
+  //! there is no memory. This is the implementation of virtual FeedSequence 
+  //! in BaseChain
   void FeedSequence(EncodingIter<CodeT> it, EncodingIter<CodeT> end,
-                    bool update_memory = false) {
+                    bool update_memory) {
+    FeedSequenceImpl(std::move(it), std::move(end), update_memory);
+  }
+
+  //! Learn from sequence and move to last state in sequence if needed or if
+  //! there is no memory. This is the implementation called either from
+  //! virtual FeedSequence or directly (in tests, for example)
+  template <class IterT>
+  void FeedSequenceImpl(IterT it, IterT end, bool update_memory = false) {
     if (it == end) {
       return;
     }
@@ -64,7 +79,7 @@ class RemberChain : public BaseChain<CodeT> {
       max_state_ = std::max(max_state_, *it);
     }
     if (update_memory || memory_.empty()) {
-      UpdateMemory(last_states);
+      UpdateMemory(last_states.rbegin(), last_states.rend());
     }
   }
 
@@ -74,11 +89,15 @@ class RemberChain : public BaseChain<CodeT> {
     assert(!memory_.empty() && "Call FeedSequence at least once");
     int64_t x = rng_() % transitions_.Sum(memory_.begin(), memory_.end());
     CodeT next_state = UpperBound(x);
+    // dbg(x, next_state);
     if (update_memory) {
       UpdateMemory(next_state);
     }
     return next_state;
   }
+
+  // todo: remove
+  DERIVE_DEBUG(memory_size_, memory_, transitions_, (transitions_.Sum(memory_.begin(), memory_.end())), max_state_);
 
  private:
   class TransitCounters {
@@ -98,6 +117,9 @@ class RemberChain : public BaseChain<CodeT> {
       }
       return sum;
     }
+
+    // todo: remove
+    DERIVE_DEBUG(counters_);
 
    private:
     std::unordered_map<CodeT, std::vector<FenwickCounter>> counters_;
@@ -119,9 +141,10 @@ class RemberChain : public BaseChain<CodeT> {
 
       // count the sum of transitions over depth
       int sum = 0;
-      for (int depth = 0; depth <= memory_; ++depth) {
+      for (int depth = 0; depth < static_cast<int>(memory_.size()); ++depth) {
         sum += transitions_.Get(memory_[depth], depth).Sum(md);
       }
+      // dbg(md, sum);
       if (sum <= x) {
         lb = md + 1;
       } else {

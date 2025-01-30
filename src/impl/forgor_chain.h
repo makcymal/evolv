@@ -9,6 +9,9 @@
 #include "base_chain.h"
 #include "fenwick_tree.h"
 
+// todo: remove
+#include "lib/dbg/dbg.h"
+
 
 namespace evolv::internal {
 
@@ -30,13 +33,25 @@ class ForgorChain : public BaseChain<CodeT> {
   using BaseChain<CodeT>::rng_;
 
  public:
+  using BaseChain<CodeT>::UpdateMemory;
+  using BaseChain<CodeT>::GetMemory;
+
   explicit ForgorChain(int random_state) : BaseChain<CodeT>(1, random_state) {
   }
 
   //! Learn from sequence and move to last state in sequence if needed or if
-  //! there is no memory
+  //! there is no memory. This is the implementation of virtual FeedSequence 
+  //! in BaseChain
   void FeedSequence(EncodingIter<CodeT> it, EncodingIter<CodeT> end,
-                    bool update_memory = false) {
+                    bool update_memory) {
+    FeedSequenceImpl(std::move(it), std::move(end), update_memory);
+  }
+
+  //! Learn from sequence and move to last state in sequence if needed or if
+  //! there is no memory. This is the implementation called either from
+  //! virtual FeedSequence or directly (in tests, for example)
+  template <class IterT>
+  void FeedSequenceImpl(IterT it, IterT end, bool update_memory = false) {
     if (it == end) {
       return;
     }
@@ -56,7 +71,7 @@ class ForgorChain : public BaseChain<CodeT> {
   //! move to predicted state if needed
   CodeT PredictState(bool update_memory = false) {
     assert(!memory_.empty() && "Call FeedSequence at least once");
-    int64_t x = rng_() % transitions_.Get(memory_[0]).TotalTransitions();
+    int64_t x = rng_() % transitions_.Get(memory_[0]).TotalSum();
     CodeT next_state = transitions_.Get(memory_[0]).UpperBound(x);
     if (update_memory) {
       UpdateMemory(next_state);
@@ -64,12 +79,18 @@ class ForgorChain : public BaseChain<CodeT> {
     return next_state;
   }
 
+  // todo: remove
+  DERIVE_DEBUG(memory_size_, memory_, transitions_)
+
  private:
   class TransitCounters {
    public:
     FenwickCounter &Get(CodeT from) {
       return counters_[from];
     }
+
+    // todo: remove
+    DERIVE_DEBUG(counters_)
 
    private:
     std::unordered_map<CodeT, FenwickCounter> counters_;

@@ -1,7 +1,10 @@
+#pragma once
+
 #include <vector>
 
 #include "gtest/gtest.h"
 #include "src/impl/fenwick_tree.h"
+
 
 using namespace evolv::internal;
 
@@ -13,6 +16,7 @@ TEST(FenwickTreeTest, ConstructEmpty) {
   EXPECT_EQ(ft.Size(), 0);
 }
 
+
 TEST(FenwickTreeTest, ConstructZero) {
   FenwickTree<int> ft(10);
   EXPECT_EQ(ft.Size(), 10);
@@ -21,12 +25,15 @@ TEST(FenwickTreeTest, ConstructZero) {
   EXPECT_EQ(ft.Sum(0, 9), 0);
 }
 
+
 TEST(FenwickTreeTest, AddValues) {
   FenwickTree<int> ft(1);
   EXPECT_EQ(ft.Sum(0, 0), 0);
+  
   ft.Add(0, 7);
   EXPECT_EQ(ft.Sum(0, 0), 7);
 }
+
 
 TEST(FenwickTreeTest, AddSquares) {
   FenwickTree<int> ft(10);
@@ -42,6 +49,7 @@ TEST(FenwickTreeTest, AddSquares) {
   EXPECT_EQ(ft.Sum(8, 9), 64 + 81);
 }
 
+
 TEST(FenwickTreeTest, AddCubics) {
   FenwickTree<int> ft(10);
   for (int i = 0; i < ft.Size(); ++i) {
@@ -51,12 +59,11 @@ TEST(FenwickTreeTest, AddCubics) {
   EXPECT_EQ(ft.Sum(1, 9), 2025);
 }
 
+
 TEST(FenwickTreeTest, UpperBound) {
   FenwickTree<int> ft;
   ft.Add(0, 3);
-  // ft.dbg();
   ft.Add(2, 3);
-  // ft.dbg();
   EXPECT_EQ(ft.UpperBound(3), 2);
   EXPECT_EQ(ft.UpperBound(4), 2);
   EXPECT_EQ(ft.UpperBound(5), 2);
@@ -86,6 +93,7 @@ class FenwickTreeFixtTest : public testing::Test {
   FenwickTree<int> ft;
 };
 
+
 TEST_F(FenwickTreeFixtTest, SumOverPrefix) {
   EXPECT_EQ(ft.Sum(0), pref[0]);
   EXPECT_EQ(ft.Sum(1), pref[1]);
@@ -99,6 +107,7 @@ TEST_F(FenwickTreeFixtTest, SumOverPrefix) {
   EXPECT_EQ(ft.Sum(9), pref[9]);
 }
 
+
 TEST_F(FenwickTreeFixtTest, SumOverSegment) {
   EXPECT_EQ(ft.Sum(0, 0), pref[0]);
   EXPECT_EQ(ft.Sum(0, 1), pref[1]);
@@ -107,6 +116,7 @@ TEST_F(FenwickTreeFixtTest, SumOverSegment) {
   EXPECT_EQ(ft.Sum(2, 4), pref[4] - pref[1]);
   EXPECT_EQ(ft.Sum(6, 9), pref[9] - pref[5]);
 }
+
 
 TEST_F(FenwickTreeFixtTest, UpperBound) {
   EXPECT_EQ(ft.UpperBound(-1), 0);

@@ -1,18 +1,16 @@
 #define PY_SSIZE_T_CLEAN
-#include <python3.12/Python.h>
+// #include <python3.12/Python.h>
 
 
-#include "../include/evolv.hpp"
+#include "src/evolv.h"
 
 #include <string>
 #include <unordered_map>
 
 // clang-format off
 struct MarkovChainObject {
-  PyObject_HEAD
-  std::unordered_map<std::string, int> state_encoder;
-  std::vector<std::string> state_decoder;
-  
+  // PyObject_HEAD
+    evolv::MarkovChain<class StateT>
 };
 // clang-format on
 

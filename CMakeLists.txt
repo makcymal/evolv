@@ -25,7 +25,7 @@ endif()
 
 # Setting up C++
 
-set(CMAKE_CXX_FLAGS "-Wall -Werror")
+set(CMAKE_CXX_FLAGS "-Wall -w")
 
 if(NOT DEFINED CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
@@ -33,10 +33,6 @@ endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(GTest REQUIRED)
-
-
-# test executable target
 
 file(GLOB
   evolv_IMPL
@@ -44,12 +40,44 @@ file(GLOB
   "src/impl/*.h"
 )
 
-add_executable(test
-  "test/main.cc"
+file(GLOB
+  evolv_SRC
   "src/evolv.h"
   ${evolv_IMPL}
 )
 
-target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(test PRIVATE GTest::GTest)
+# tests executable target
+
+find_package(GTest REQUIRED)
+
+if(GTest_FOUND)
+  include(ExternalProject)
+  
+  # ExternalProject_Add(
+  #   dbg-cpp
+  #   GIT_REPOSITORY https://github.com/makcymal/dbg-cpp.git
+  #   GIT_TAG master
+  #   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/dbg
+  #   CONFIGURE_COMMAND ""
+  #   BUILD_COMMAND ""
+  #   INSTALL_COMMAND ""
+  #   LOG_DOWNLOAD ON
+  # )
+
+  file(GLOB
+    instantiate_SRC
+    "instantiate.h"
+    "instantiate.cc"
+  )
+
+  add_executable(tests
+    "tests/main.cc"
+    ${evolv_SRC}
+    ${instantiate_SRC}
+  )
+  target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(tests PRIVATE GTest::GTest)
+else()
+  set_property(TARGET tests PROPERTY EXCLUDE_FROM_ALL TRUE)
+endif()

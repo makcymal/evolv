@@ -5,6 +5,9 @@
 #include <iostream>
 #include <vector>
 
+// todo: remove
+#include "lib/dbg/dbg.h"
+
 
 namespace evolv::internal {
 
@@ -35,13 +38,13 @@ class FenwickTree {
     tree_.resize(new_size, 0);
     for (SizeT idx = old_size; idx < new_size; ++idx) {
       auto sum = Sum(idx - (idx & -idx), old_size - 2);
-      // std::cout << "adding to " << idx - 1 << " sum " << sum << std::endl;
       tree_[idx] += sum;
     }
   }
 
   //! Count the sum over prefix [0, rb]
   DataT Sum(SizeT rb) const {
+    rb = std::min(rb, Size() - 1);
     rb++;
     DataT res = 0;
     for (; rb > 0; rb -= (rb & -rb)) {
@@ -55,9 +58,7 @@ class FenwickTree {
     if (rb < lb) {
       return 0;
     }
-    // std::cout << "sum on [" << lb << ", " << rb << "] = ";
     int sum_rb = Sum(rb), sum_lb = Sum(lb - 1);
-    // std::cout << sum_rb << " - " << sum_lb << std::endl;
     return sum_rb - sum_lb;
   }
 
@@ -89,13 +90,17 @@ class FenwickTree {
     }
     return idx;
   }
-
-  void dbg() {
-    for (int i = 1; i < (int)(tree_.size()); ++i) {
-      std::cout << tree_[i] << ' ';
+  
+  std::vector<DataT> AsCounter() const {
+    std::vector<DataT> counter(Size());
+    for (int i = 0; i < counter.size(); ++i) {
+      counter[i] = Sum(i, i);
     }
-    std::cout << std::endl;
+    return counter;
   }
+
+  // todo: remove
+  DERIVE_DEBUG(AsCounter(), total_sum_)
 
  private:
   std::vector<DataT> tree_;

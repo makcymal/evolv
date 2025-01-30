@@ -20,10 +20,6 @@
 *.dylib
 *.dll
 
-# Fortran module files
-*.mod
-*.smod
-
 # Compiled Static libraries
 *.lai
 *.la
@@ -54,9 +50,14 @@ bin/
 .build/
 .ignore/
 test.*
+*.log
 
 *[Cc][Mm]ake*
 !CMakeLists.txt
 
 docs/
+
+lib/
+
+.clangd
 
