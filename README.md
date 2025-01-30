@@ -11,7 +11,35 @@
 By definition, Markov chain is memoryless, which means that chains memory is limited to only one current state. `evolv` proposes extension - Markov chain tracking some number
 of previously visited states - a Markov chain with *memory*. So, the first case is implemented in `ForgorChain` class, _forgetting_ about previous states, and the second one - in `RemberChain` class, _remembering_ a fixed number of previous states.
 
-### Usage
+
+## Example
+
+Create Markov chain with the number of previous states to remember, feed it the sequence, optionally set the current state (from where to begin) and try to predict the following state! Note: the predictions are probabilistic, not deterministic.
+
+```c++
+#include <string>
+#include <vector>
+#include "src/evolv.h"
+
+int main() {
+  std::vector<std::string> sentenses{
+      "The",     "morning", "follows", "night",   ".",
+      "The",     "day",     "follows", "morning", ".",
+      "The",     "evening", "follows", "day",     ".",
+      "The",     "night",   "follows", "evening", "."
+  };
+  evolv::MarkovChain<std::string> chain(/*memorize_previous=*/2,
+                                        /*random_state=*/32);
+  chain.FeedSequence(sentenses.begin(), sentenses.end());
+  std::vector<std::string> memory{"The", "evening", "follows"};
+  chain.UpdateMemory(memory.begin(), memory.end());
+  std::string next = chain.PredictState(/*update_memory=*/true);
+  assert(next == "day");
+}
+```
+
+
+## Usage
 
 `MarkovChain` is the class that provides all the necessary functionality. Create an instance of it and decide how many previous states the chain should remember. Then, use the `FeedSequence` method and pass the sequence of homogeneous elements that the chain should learn from. You can call this method as many times as needed, provided that the subsequent sequences contain homogeneous elements of the same type.
 

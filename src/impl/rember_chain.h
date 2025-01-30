@@ -11,9 +11,6 @@
 #include "base_chain.h"
 #include "fenwick_tree.h"
 
-// todo: remove
-#include "lib/dbg/dbg.h"
-
 
 namespace evolv::internal {
 
@@ -89,15 +86,11 @@ class RemberChain : public BaseChain<CodeT> {
     assert(!memory_.empty() && "Call FeedSequence at least once");
     int64_t x = rng_() % transitions_.Sum(memory_.begin(), memory_.end());
     CodeT next_state = UpperBound(x);
-    // dbg(x, next_state);
     if (update_memory) {
       UpdateMemory(next_state);
     }
     return next_state;
   }
-
-  // todo: remove
-  DERIVE_DEBUG(memory_size_, memory_, transitions_, (transitions_.Sum(memory_.begin(), memory_.end())), max_state_);
 
  private:
   class TransitCounters {
@@ -117,9 +110,6 @@ class RemberChain : public BaseChain<CodeT> {
       }
       return sum;
     }
-
-    // todo: remove
-    DERIVE_DEBUG(counters_);
 
    private:
     std::unordered_map<CodeT, std::vector<FenwickCounter>> counters_;
@@ -144,7 +134,6 @@ class RemberChain : public BaseChain<CodeT> {
       for (int depth = 0; depth < static_cast<int>(memory_.size()); ++depth) {
         sum += transitions_.Get(memory_[depth], depth).Sum(md);
       }
-      // dbg(md, sum);
       if (sum <= x) {
         lb = md + 1;
       } else {

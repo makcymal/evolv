@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "encoding_iter.h"
-#include "lib/dbg/dbg.h"
 #include "src/impl/fenwick_tree.h"
 
 
@@ -41,12 +40,10 @@ class BaseChain {
   //! Push a new state given as single value into memory forgetting the oldest
   //! states
   void UpdateMemory(CodeT state) {
-    // dbg("UpdateMemory called with:", state, memory_);
     if (static_cast<int>(memory_.size()) >= memory_size_) {
       memory_.pop_back();
     }
     memory_.push_front(state);
-    // dbg(memory_);
   }
 
   //! Push a new state given as pair of iterators into memory forgetting the
@@ -54,7 +51,6 @@ class BaseChain {
   template <class IterT>
   void UpdateMemory(IterT it, IterT end) {
     for (; it != end; ++it) {
-      // dbg(*it);
       if (static_cast<int>(memory_.size()) >= memory_size_) {
         memory_.pop_back();
       }
@@ -72,8 +68,6 @@ class BaseChain {
   //! Predict the subsequent state based on current state and possibly memory,
   //! move to predicted state if needed
   virtual CodeT PredictState(bool update_memory = false) = 0;
-
-  DERIVE_DEBUG(memory_size_, memory_);
 
  protected:
   using CountT = int64_t;

@@ -5,9 +5,6 @@
 #include <iostream>
 #include <vector>
 
-// todo: remove
-#include "lib/dbg/dbg.h"
-
 
 namespace evolv::internal {
 
@@ -98,9 +95,6 @@ class FenwickTree {
     }
     return counter;
   }
-
-  // todo: remove
-  DERIVE_DEBUG(AsCounter(), total_sum_)
 
  private:
   std::vector<DataT> tree_;

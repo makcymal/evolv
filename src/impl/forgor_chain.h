@@ -9,9 +9,6 @@
 #include "base_chain.h"
 #include "fenwick_tree.h"
 
-// todo: remove
-#include "lib/dbg/dbg.h"
-
 
 namespace evolv::internal {
 
@@ -79,18 +76,12 @@ class ForgorChain : public BaseChain<CodeT> {
     return next_state;
   }
 
-  // todo: remove
-  DERIVE_DEBUG(memory_size_, memory_, transitions_)
-
  private:
   class TransitCounters {
    public:
     FenwickCounter &Get(CodeT from) {
       return counters_[from];
     }
-
-    // todo: remove
-    DERIVE_DEBUG(counters_)
 
    private:
     std::unordered_map<CodeT, FenwickCounter> counters_;

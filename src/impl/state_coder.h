@@ -4,9 +4,6 @@
 #include <unordered_map>
 #include <vector>
 
-// todo: remove
-#include "lib/dbg/dbg.h"
-
 
 namespace evolv::internal {
 
@@ -37,9 +34,6 @@ class StateCoder {
     // std::cout << "decoded to: " << decoder_[code] << std::endl;
     return decoder_[code];
   }
-  
-  // todo: remove
-  DERIVE_DEBUG(encoder_, decoder_)
 
  private:
   //! Stores mapping from state to code

@@ -7,9 +7,6 @@
 #include "state_coder.h"
 #include "utils.h"
 
-// todo: remove
-#include "lib/dbg/dbg.h"
-
 
 namespace evolv::internal {
 
@@ -71,9 +68,6 @@ class EncodingIterImpl : public EncodingIterIface<CodeT> {
             .iter_;
     return iter_ == other_iter;
   }
-  
-  // todo: remove
-  DERIVE_DEBUG(*iter_, state_coder_)
 
  private:
   //! Underlying iterator
@@ -126,8 +120,6 @@ class EncodingIter {
   bool operator!=(const EncodingIter<CodeT> &other) const {
     return !(*this == other);
   }
-  
-  DERIVE_DEBUG(impl_)
 
  private:
   // EncodingIterImpl, implicitly casted to EncodingIterIface behind ptr

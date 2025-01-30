@@ -52,19 +52,6 @@ file(GLOB
 find_package(GTest REQUIRED)
 
 if(GTest_FOUND)
-  include(ExternalProject)
-  
-  # ExternalProject_Add(
-  #   dbg-cpp
-  #   GIT_REPOSITORY https://github.com/makcymal/dbg-cpp.git
-  #   GIT_TAG master
-  #   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/dbg
-  #   CONFIGURE_COMMAND ""
-  #   BUILD_COMMAND ""
-  #   INSTALL_COMMAND ""
-  #   LOG_DOWNLOAD ON
-  # )
-
   file(GLOB
     instantiate_SRC
     "instantiate.h"

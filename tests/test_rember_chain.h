@@ -7,10 +7,6 @@
 #include "gtest/gtest.h"
 #include "instantiate.h"
 
-// todo: remove
-#include "lib/dbg/dbg.h"
-
-
 using namespace evolv::internal;
 
 

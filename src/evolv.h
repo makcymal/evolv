@@ -13,9 +13,6 @@
 #include "impl/state_coder.h"
 #include "impl/utils.h"
 
-// todo: remove
-#include "lib/dbg/dbg.h"
-
 
 //! Entry-point namespace for the library
 namespace evolv {
@@ -68,7 +65,6 @@ class MarkovChain {
     chain_->FeedSequence(internal::EncodingIter<CodeT>(it, state_coder_),
                          internal::EncodingIter<CodeT>(end, state_coder_),
                          update_memory);
-    dbg(chain_);
   }
 
   //! Predict the subsequent state based on current state and possibly memory,
@@ -101,9 +97,6 @@ class MarkovChain {
     }
     return decoded_memory;
   }
-
-  // todo: remove
-  DERIVE_DEBUG(chain_, state_coder_);
 
  private:
   //! Chain implementation, either ForgorChain or RemberChain
