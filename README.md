@@ -1,6 +1,6 @@
-# `evolv` – Markov chains in C++ and Python
+# `evolv` – Markov chains in C++
 
-`evolv` aims to provide an efficient implementation of Markov chains in C++ and Python.
+`evolv` aims to provide an efficient implementation of Markov chains in C++.
 
 <p align="center" width="100%">
     <img src="fig/i-forgor-i-rember.png" width="50%">
