@@ -45,25 +45,29 @@ int main() {
 
 The chain initially starts in the state corresponding to the last elements of the lastly fed sequence. Use the `PredictState` method to predict the next state.
 
+To use it with CMake project add it via `ExternalProject`:
+```cmake
+include(ExternalProject)
 
-### Implementation notes
-
-The core of the library is written in C++ and is located in the `src` directory. It is designed to be compiled into a shared library.
-
-A Python module is implemented using the Python C API and is located in the `pymodule` directory. This module makes use of the previously compiled shared library and is also compiled into a shared library itself.
-
-
-### Build
-
-CMake output generator files is located in `.cmake` directory:
-```shell
-cmake -B .cmake
-cd .cmake
+ExternalProject_Add(
+  evolv
+  GIT_REPOSITORY https://github.com/makcymal/evolv.git
+  GIT_TAG master
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/evolv
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+  LOG_DOWNLOAD ON
+)
 ```
-Run your build system. Outputs are located in the `.build` directory
+
+And use in your code:
+```c++
+#include "lib/evolv/src/evolv.h"
+```
 
 
-### Generate docs
+## Generate docs
 
 ```shell
 doxygen
